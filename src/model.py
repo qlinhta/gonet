@@ -2,9 +2,9 @@ import tensorflow as tf
 from tensorflow.keras import layers, regularizers, Model
 
 
-class MyModel(Model):
+class GoModel(Model):
     def __init__(self, planes, filters):
-        super(MyModel, self).__init__()
+        super(GoModel, self).__init__()
         self.conv1 = layers.Conv2D(filters, 1, activation='relu', padding='same')
         self.conv_blocks = [layers.Conv2D(filters, 3, activation='relu', padding='same') for _ in range(5)]
         self.policy_head_conv = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,

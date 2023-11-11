@@ -1,12 +1,12 @@
 import tensorflow as tf
-from model import MyModel
+from model import GoModel
 from dataloader import load_data
 import golois
 import gc
 
 
 def train_model(epochs, batch_size, N, planes, moves, filters):
-    model = MyModel(planes, filters)
+    model = GoModel(planes, filters)
     model.summary()
     model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0005, momentum=0.9),
                   loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},

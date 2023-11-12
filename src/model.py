@@ -7,10 +7,21 @@ class GoModel:
         # Define the input
         input_layer = layers.Input(shape=(19, 19, planes), name='input')
 
-        # Convolutional layers
+        """# Convolutional layers
         x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input_layer)
         for _ in range(5):
-            x = layers.Conv2D(filters, 3, activation='relu', padding='same')(x)
+            x = layers.Conv2D(filters, 3, activation='relu', padding='same')(x)"""
+
+        x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input_layer)
+
+        # Residual blocks
+        for _ in range(5):
+            residual = x
+            x = layers.Conv2D(filters, 3, padding='same')(x)
+            x = layers.ReLU()(x)
+            x = layers.Conv2D(filters, 3, padding='same')(x)
+            x = layers.add([x, residual])
+            x = layers.ReLU()(x)
 
         # Policy head
         policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,

@@ -14,12 +14,14 @@ class GoModel:
 
         x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input_layer)
 
-        # Residual blocks
+        # Residual blocks // v2.batchnorm after conv2d
         for _ in range(5):
             residual = x
             x = layers.Conv2D(filters, 3, padding='same')(x)
+            x = layers.BatchNormalization()(x)
             x = layers.ReLU()(x)
             x = layers.Conv2D(filters, 3, padding='same')(x)
+            x = layers.BatchNormalization()(x)
             x = layers.add([x, residual])
             x = layers.ReLU()(x)
 

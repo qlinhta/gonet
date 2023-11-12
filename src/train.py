@@ -57,14 +57,25 @@ class CustomCallback(tf.keras.callbacks.Callback):
             golois.getValidation(self.input_data, self.policy, self.value, self.end)
             val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
             print("Validation metrics:", val)
-            self.model.save('test.h5')
+            self.model.save(f'models/adam_model_{val[3]:.2f}.h5')
 
 
 def train_model(epochs, batch_size, N, planes, moves, filters):
     go = GoModel(planes, filters)
     model = go.build()
     model.summary()
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.005, momentum=0.9),
+
+    """lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=0.005,
+        decay_steps=4000,
+        decay_rate=0.9)"""
+
+    """model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9),
+                  loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
+                  loss_weights={'policy': 1.0, 'value': 1.0},
+                  metrics={'policy': 'categorical_accuracy', 'value': 'mse'})"""
+
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
                   loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
                   loss_weights={'policy': 1.0, 'value': 1.0},
                   metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
@@ -95,7 +106,7 @@ if __name__ == '__main__':
     with open(args.config, 'r') as f:
         config = json.load(f)
 
-    epochs = config.get('epochs', 100)
+    epochs = config.get('epochs', 200)
     batch = config.get('batch', 256)
     N = config.get('N', 10000)
     planes = config.get('planes', 31)
@@ -103,4 +114,3 @@ if __name__ == '__main__':
     filters = config.get('filters', 16)
 
     model = train_model(epochs, batch, N, planes, moves, filters)
-    model.save('test.h5')

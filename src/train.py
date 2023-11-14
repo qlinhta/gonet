@@ -48,8 +48,10 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     model.summary()
 
     if model_name == "LyonGo":
-        learning_rate = 0.0001
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        boundaries = [100, 150]
+        values = [0.005, 0.0005, 0.00005]
+        lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
             initial_learning_rate=0.005, decay_steps=4000, decay_rate=0.9)

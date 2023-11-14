@@ -31,15 +31,15 @@ class CustomCallback(tf.keras.callbacks.Callback):
             golois.getValidation(self.input_data, self.policy, self.value, self.end)
             val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
             print("Validation metrics:", val)
-            self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_256_0.005_{val[3]:.2f}.h5')
-            # self.model.save(f'models/LyonGo_128_5_0.00001_{val[3]:.2f}.h5')
+            # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
+            self.model.save(f'models/LyonGo_50K_256_5_0.00001_{val[3]:.2f}.h5')
 
 
 def train_model(epochs, batch_size, N, planes, moves, filters):
     classic = ClassicGo(planes, filters)
     lyon = LyonGo(planes, filters, 128, 5)
     paris = ParisGo(planes, filters, 1000, 0.005)
-    model = paris.build()
+    model = lyon.build()
     model.summary()
 
     """lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
@@ -52,15 +52,15 @@ def train_model(epochs, batch_size, N, planes, moves, filters):
                   loss_weights={'policy': 1.0, 'value': 1.0},
                   metrics={'policy': 'categorical_accuracy', 'value': 'mse'})"""
 
-    """model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
-                  loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
-                  loss_weights={'policy': 1.0, 'value': 1.0},
-                  metrics={'policy': 'categorical_accuracy', 'value': 'mse'})"""
-
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=paris.lr_schedule),
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
                   loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
                   loss_weights={'policy': 1.0, 'value': 1.0},
                   metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
+
+    """model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=paris.lr_schedule),
+                  loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
+                  loss_weights={'policy': 1.0, 'value': 1.0},
+                  metrics={'policy': 'categorical_accuracy', 'value': 'mse'})"""
 
     input_data, policy, value, end, groups = load_data(N, planes, moves)
     print("getValidation", flush=True)

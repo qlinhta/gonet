@@ -31,7 +31,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
             golois.getValidation(self.input_data, self.policy, self.value, self.end)
             val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
             print("Validation metrics:", val)
-            self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_0.00001{val[3]:.2f}.h5')
+            self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_0.0005_{val[3]:.2f}.h5')
             # self.model.save(f'models/LyonGo_128_5_0.00001_{val[3]:.2f}.h5')
 
 

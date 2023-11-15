@@ -22,7 +22,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.batch_size = batch_size
 
     def on_epoch_end(self, epoch, logs=None):
-        
+        logs = logs or {}
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
         
         if (epoch + 1) % 5 == 0:

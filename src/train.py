@@ -29,17 +29,17 @@ class CustomCallback(tf.keras.callbacks.Callback):
         if (epoch + 1) % 5 == 0:
             gc.collect()
 
-        if (epoch + 1) % 20 == 0:
-            golois.getValidation(self.input_data, self.policy, self.value, self.end)
-            val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
-            print("Validation metrics:", val)
+        golois.getValidation(self.input_data, self.policy, self.value, self.end)
+        val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
+        print("Validation metrics:", val)
+        
+        with self.writer.as_default():
+          for metric, value in zip(self.model.metrics_names, val):
+            tf.summary.scalar(f'val_{metric}', value, step=epoch)
+            self.writer.flush()
 
-            with self.writer.as_default():
-              for metric, value in zip(self.model.metrics_names, val):
-                  tf.summary.scalar(f'val_{metric}', value, step=epoch)
-              self.writer.flush()
-            # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
-            self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
+        # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
+        self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
 
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):

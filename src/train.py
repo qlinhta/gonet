@@ -37,9 +37,9 @@ class CustomCallback(tf.keras.callbacks.Callback):
           for metric, value in zip(self.model.metrics_names, val):
             tf.summary.scalar(f'val_{metric}', value, step=epoch)
             self.writer.flush()
-
-        # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
-        self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
+        if (epoch + 1) % 20 == 0:
+          # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
+          self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
 
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
@@ -56,7 +56,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
 
     if model_name == "LyonGo":
         boundaries = [100, 150]
-        values = [0.0005, 0.0001, 0.00005]
+        values = [0.0001, 0.00005, 0.00001]
         lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
@@ -82,7 +82,6 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
 
     model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
               callbacks=[tensorboard_callback, custom_callback])
-
     return model
 
 

@@ -33,7 +33,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         print("Validation metrics:", val)
         if (epoch + 1) % 10 == 0:
           # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
-          self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
+          self.model.save(f'models/LyonGo_10K_32_5_cosine_32_{val[3]:.2f}.h5')
 
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
@@ -49,7 +49,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     model.summary()
 
     if model_name == "LyonGo":
-        lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=4000)
+        lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=4000)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(

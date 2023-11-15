@@ -22,16 +22,21 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.batch_size = batch_size
 
     def on_epoch_end(self, epoch, logs=None):
+        
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
-
+        
         if (epoch + 1) % 5 == 0:
             gc.collect()
 
         golois.getValidation(self.input_data, self.policy, self.value, self.end)
         val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
         print("Validation metrics:", val)
-
-        if (epoch + 1) % 20 == 0:
+        logs["val_loss"] = val[0]
+        logs["val_policy_loss"] = val[1]
+        logs["val_value_loss"] = val[2]
+        logs["val_policy_categorical_accuracy"] = val[3]
+        logs["val_value_mse"] = val[4]
+        if (epoch + 1) % 10 == 0:
           # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
           self.model.save(f'models/LyonGo_10K_128_5_annealing_64_{val[3]:.2f}.h5')
 

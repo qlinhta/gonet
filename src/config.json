@@ -1,9 +1,9 @@
 {
     "epochs": 100,
-    "batch": 128,
+    "batch": 32,
     "N": 10000,
     "planes": 31,
     "moves": 361,
-    "filters": 64,
+    "filters": 32,
     "model_name": "LyonGo"
 }

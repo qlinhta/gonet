@@ -28,10 +28,10 @@ class CustomCallback(tf.keras.callbacks.Callback):
         if (epoch + 1) % 5 == 0:
             gc.collect()
 
-        golois.getValidation(self.input_data, self.policy, self.value, self.end)
-        val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=0, batch_size=self.batch_size)
-        print("Validation metrics:", val)
         if (epoch + 1) % 10 == 0:
+          golois.getValidation(self.input_data, self.policy, self.value, self.end)
+          val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=1, batch_size=self.batch_size)
+          print("Validation metrics:", val)
           # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
           self.model.save(f'models/LyonGo_10K_32_5_cosine_32_{val[3]:.2f}.h5')
 
@@ -49,11 +49,11 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     model.summary()
 
     if model_name == "LyonGo":
-        lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=4000)
+        lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=32000)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=0.0005, decay_steps=4000, decay_rate=0.9)
+            initial_learning_rate=0.0005, decay_steps=32000, decay_rate=0.9)
         optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
     elif model_name == "ParisGo":
         optimizer = tf.keras.optimizers.Adam(learning_rate=model.lr_schedule)

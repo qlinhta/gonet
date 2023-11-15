@@ -8,6 +8,7 @@ import gc
 import os
 from datetime import datetime
 from prettytable import PrettyTable
+from tensorflow.keras.optimizers.schedules import CosineDecay
 
 
 class CustomCallback(tf.keras.callbacks.Callback):
@@ -48,13 +49,11 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     model.summary()
 
     if model_name == "LyonGo":
-        boundaries = [100, 150]
-        values = [0.00001, 0.000005, 0.000001]
-        lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
+        lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=4000)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=0.005, decay_steps=4000, decay_rate=0.9)
+            initial_learning_rate=0.0005, decay_steps=4000, decay_rate=0.9)
         optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
     elif model_name == "ParisGo":
         optimizer = tf.keras.optimizers.Adam(learning_rate=model.lr_schedule)

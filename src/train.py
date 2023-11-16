@@ -21,6 +21,8 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.groups = groups
         self.N = N
         self.batch_size = batch_size
+        self.cc = "LyonGo_10K_32_7_cosine_32_0.0005"
+        # self.cc = "ParisGo_MixNet_Cosin_Swish_128_0.005"
 
     def on_epoch_end(self, epoch, logs=None):
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
@@ -32,13 +34,14 @@ class CustomCallback(tf.keras.callbacks.Callback):
           golois.getValidation(self.input_data, self.policy, self.value, self.end)
           val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=1, batch_size=self.batch_size)
           print("Validation metrics:", val)
-          # self.model.save(f'models/ParisGo_MixNet_Cosin_Swish_128_0.005_{val[3]:.2f}.h5')
-          self.model.save(f'models/LyonGo_10K_32_6_cosine_32_0.0005_{val[3]:.2f}.h5')
+          
+          # self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
+          self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
 
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     if model_name == "LyonGo":
-        model = LyonGo(planes, filters, 128, 6).build()
+        model = LyonGo(planes, filters, 128, 7).build()
     elif model_name == "ClassicGo":
         model = ClassicGo(planes, filters).build()
     elif model_name == "ParisGo":
@@ -67,10 +70,10 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     print("getValidation", flush=True)
     golois.getValidation(input_data, policy, value, end)
 
-    log_dir = os.path.join("logs", "fit", f"{model_name}_{datetime.now().strftime('%Y%m%d-%H%M%S')}")
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq='epoch')
-
     custom_callback = CustomCallback(input_data, policy, value, end, groups, N, batch_size)
+
+    log_dir = os.path.join("logs", "fit", f"{custom_callback.cc}")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq='epoch')
 
     model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
               callbacks=[tensorboard_callback, custom_callback])

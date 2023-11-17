@@ -29,19 +29,20 @@ class CustomCallback(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
-        
+
         if (epoch + 1) % 5 == 0:
             gc.collect()
 
         if (epoch + 1) % 10 == 0:
-          golois.getValidation(self.input_data, self.policy, self.value, self.end)
-          val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=1, batch_size=self.batch_size)
-          print("Validation metrics:", val)
-          self.val_losses.append(val[1])
-          self.val_accuracies.append(val[3])
-          
-          # self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
-          self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
+            golois.getValidation(self.input_data, self.policy, self.value, self.end)
+            val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=1, batch_size=self.batch_size)
+            print("Validation metrics:", val)
+            self.val_losses.append(val[1])
+            self.val_accuracies.append(val[3])
+
+            # self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
+            self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
+
 
 def plot_curves(history, custom_callback):
     epochs = range(1, len(history.history['loss']) + 1)
@@ -63,6 +64,7 @@ def plot_curves(history, custom_callback):
     plt.legend()
 
     plt.show()
+
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     if model_name == "LyonGo":
@@ -101,7 +103,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq='epoch')
 
     history = model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
-              callbacks=[tensorboard_callback, custom_callback])
+                        callbacks=[tensorboard_callback, custom_callback])
     plot_curves(history, custom_callback)
     return model
 

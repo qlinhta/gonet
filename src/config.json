@@ -4,6 +4,6 @@
     "N": 10000,
     "planes": 31,
     "moves": 361,
-    "filters": 32,
+    "filters": 64,
     "model_name": "LyonGo"
 }

@@ -24,7 +24,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.batch_size = batch_size
         self.val_losses = []
         self.val_accuracies = []
-        self.cc = "LyonGo_10K_32_5_cosine_32_0.0005"
+        self.cc = "LyonGo_10K_32_6_cosine_32_0.0005"
         # self.cc = "ParisGo_MixNet_Cosin_Swish_128_0.005"
 
     def on_epoch_end(self, epoch, logs=None):
@@ -47,7 +47,7 @@ def plot_curves(history, custom_callback):
     epochs = range(1, len(history.history['loss']) + 1)
     plt.figure(figsize=(12, 5))
     plt.subplot(1, 2, 1)
-    plt.plot(epochs, history.history['categorical_accuracy'], label='Train Accuracy')
+    plt.plot(epochs, history.history['policy_categorical_accuracy'], label='Train Accuracy')
     plt.plot(epochs, custom_callback.val_accuracies, label='Validation Accuracy')
     plt.title('Model Accuracy')
     plt.xlabel('Epoch')
@@ -55,7 +55,7 @@ def plot_curves(history, custom_callback):
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(epochs, history.history['loss'], label='Train Loss')
+    plt.plot(epochs, history.history['policy_loss'], label='Train Loss')
     plt.plot(epochs, custom_callback.val_losses, label='Validation Loss')
     plt.title('Model Loss')
     plt.xlabel('Epoch')
@@ -66,7 +66,7 @@ def plot_curves(history, custom_callback):
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     if model_name == "LyonGo":
-        model = LyonGo(planes, filters, 128, 5).build()
+        model = LyonGo(planes, filters, 128, 6).build()
     elif model_name == "ClassicGo":
         model = ClassicGo(planes, filters).build()
     elif model_name == "ParisGo":

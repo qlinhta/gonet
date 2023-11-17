@@ -43,7 +43,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
           # self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
           self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
 
-def plot_curves(history, custom_callback):
+def plot_curves(history, custom_callback, filename):
     epochs = range(1, len(history.history['loss']) + 1)
     plt.figure(figsize=(12, 5))
     plt.subplot(1, 2, 1)
@@ -62,6 +62,8 @@ def plot_curves(history, custom_callback):
     plt.ylabel('Loss')
     plt.legend()
 
+    to_file = os.path.join("figures", f"{filename}")
+    plt.savefig(to_file, format='pdf', bbox_inches='tight')
     plt.show()
 
 
@@ -103,7 +105,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
 
     history = model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
                         callbacks=[tensorboard_callback, custom_callback])
-    plot_curves(history, custom_callback)
+    plot_curves(history, custom_callback, custom_callback.cc)
     return model
 
 

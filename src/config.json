@@ -1,5 +1,5 @@
 {
-    "epochs": 100,
+    "epochs": 20,
     "batch": 32,
     "N": 10000,
     "planes": 31,

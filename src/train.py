@@ -6,6 +6,7 @@ from dataloader import load_data
 import golois
 import gc
 import os
+import matplotlib.pyplot as plt
 from datetime import datetime
 from prettytable import PrettyTable
 from tensorflow.keras.optimizers.schedules import CosineDecay
@@ -21,7 +22,9 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.groups = groups
         self.N = N
         self.batch_size = batch_size
-        self.cc = "LyonGo_10K_32_7_cosine_32_0.0005"
+        self.val_losses = []
+        self.val_accuracies = []
+        self.cc = "LyonGo_10K_32_5_cosine_32_0.0005"
         # self.cc = "ParisGo_MixNet_Cosin_Swish_128_0.005"
 
     def on_epoch_end(self, epoch, logs=None):
@@ -34,14 +37,36 @@ class CustomCallback(tf.keras.callbacks.Callback):
           golois.getValidation(self.input_data, self.policy, self.value, self.end)
           val = self.model.evaluate(self.input_data, [self.policy, self.value], verbose=1, batch_size=self.batch_size)
           print("Validation metrics:", val)
+          self.val_losses.append(val[1])
+          self.val_accuracies.append(val[3])
           
           # self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
           self.model.save(f'models/{self.cc}_{val[3]:.2f}.h5')
 
+def plot_curves(history, custom_callback):
+    epochs = range(1, len(history.history['loss']) + 1)
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, history.history['categorical_accuracy'], label='Train Accuracy')
+    plt.plot(epochs, custom_callback.val_accuracies, label='Validation Accuracy')
+    plt.title('Model Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, history.history['loss'], label='Train Loss')
+    plt.plot(epochs, custom_callback.val_losses, label='Validation Loss')
+    plt.title('Model Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.show()
 
 def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     if model_name == "LyonGo":
-        model = LyonGo(planes, filters, 128, 7).build()
+        model = LyonGo(planes, filters, 128, 5).build()
     elif model_name == "ClassicGo":
         model = ClassicGo(planes, filters).build()
     elif model_name == "ParisGo":
@@ -75,8 +100,9 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     log_dir = os.path.join("logs", "fit", f"{custom_callback.cc}")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq='epoch')
 
-    model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
+    history = model.fit(input_data, {'policy': policy, 'value': value}, epochs=epochs, batch_size=batch_size,
               callbacks=[tensorboard_callback, custom_callback])
+    plot_curves(history, custom_callback)
     return model
 
 

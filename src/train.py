@@ -24,7 +24,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.batch_size = batch_size
         self.val_losses = []
         self.val_accuracies = []
-        self.cc = "LyonGo_10K_32_5_cosine_32_0.0003_100ep"
+        self.cc = "LyonGo_10K_32_5_cosine_32_0.0005_100ep"
         # self.cc = "ParisGo_MixNet_Cosin_Swish_128_0.005"
 
     def on_epoch_end(self, epoch, logs=None):
@@ -83,7 +83,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     model.summary()
 
     if model_name == "LyonGo":
-        lr_schedule = CosineDecay(initial_learning_rate=0.0003, decay_steps=32000)
+        lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=32000)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     elif model_name == "ClassicGo":
         lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(

@@ -95,12 +95,10 @@ class LyonGo:
 
 
 class ParisGo:
-    def __init__(self, planes, filters, steps, initial_learning_rate):
+    def __init__(self, planes, filters):
         self.input_layer = layers.Input(shape=(19, 19, planes), name='input')
         self.filters = filters
         self.planes = planes
-        self.lr_schedule = CosineDecay(initial_learning_rate, steps)
-
         self.model = self.build()
 
     def build(self):
@@ -116,7 +114,6 @@ class ParisGo:
         return model
 
     def mixnet_block(self, input_tensor, filters):
-        # BatchNorm
         branch_a = layers.Conv2D(filters, 1, activation='swish', padding='same')(input_tensor)
         branch_a = layers.BatchNormalization()(branch_a)
         branch_b = layers.Conv2D(filters, (3, 3), activation='swish', padding='same')(input_tensor)

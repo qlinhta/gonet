@@ -1,7 +1,7 @@
 {
-    "epochs": 200,
+    "epochs": 100,
     "batch": 32,
-    "N": 10000,
+    "N": 20000,
     "planes": 31,
     "moves": 361,
     "filters": 16,

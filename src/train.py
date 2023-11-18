@@ -25,7 +25,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.val_losses = []
         self.val_accuracies = []
         # self.cc = "LyonGo_10K_32_5_cosine_32_0.0005_100ep"
-        self.cc = "ParisGo_32b_16f_0.0005_100ep"
+        self.cc = "ParisGo_32b_16f_0.00005_100ep"
 
     def on_epoch_end(self, epoch, logs=None):
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
@@ -90,7 +90,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
             initial_learning_rate=0.0005, decay_steps=32000, decay_rate=0.9)
         optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
     elif model_name == "ParisGo":
-        lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=32000)
+        lr_schedule = CosineDecay(initial_learning_rate=0.00005, decay_steps=32000)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
     model.compile(optimizer=optimizer,

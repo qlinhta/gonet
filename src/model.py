@@ -104,7 +104,7 @@ class ParisGo:
     def build(self):
         x = self.mixnet_block(self.input_layer, self.filters)
 
-        for _ in range(4):
+        for _ in range(5):
             x = self.mixnet_block(x, self.filters)
 
         policy_head = self.create_policy_head(x)

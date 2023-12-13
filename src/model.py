@@ -6,7 +6,7 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 class ClassicGo:
     def __init__(self, planes, filters):
         # Define the input
-        input_layer = layers.Input(shape=(19, 19, planes), name='input')
+        input_layer = layers.Input(shape=(19, 19, planes), name='board')
 
         # Convolutional layers
         x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input_layer)
@@ -38,7 +38,7 @@ class ClassicGo:
 
 class LyonGo:
     def __init__(self, planes, filters, trunk, blocks):
-        self.input_layer = layers.Input(shape=(19, 19, planes), name='input')
+        self.input_layer = layers.Input(shape=(19, 19, planes), name='board')
         self.filters = filters
         self.trunk = trunk
         self.blocks = blocks
@@ -96,7 +96,7 @@ class LyonGo:
 
 class ParisGo:
     def __init__(self, planes, filters):
-        self.input_layer = layers.Input(shape=(19, 19, planes), name='input')
+        self.input_layer = layers.Input(shape=(19, 19, planes), name='board')
         self.filters = filters
         self.planes = planes
         self.model = self.build()

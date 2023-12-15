@@ -96,6 +96,18 @@ class ParisGo:
         self.dropout_rate = dropout_rate
         self.model = self.build()
 
+    def mixnet_block(self, input_tensor, filters):
+        branch_a = layers.Conv2D(filters, 1, activation='swish', padding='same')(input_tensor)
+        branch_a = layers.BatchNormalization()(branch_a)
+        branch_b = layers.Conv2D(filters, (3, 3), activation='swish', padding='same')(input_tensor)
+        branch_b = layers.BatchNormalization()(branch_b)
+        branch_c = layers.Conv2D(filters, (5, 5), activation='swish', padding='same')(input_tensor)
+        branch_c = layers.BatchNormalization()(branch_c)
+
+        mixed = layers.Concatenate()([branch_a, branch_b, branch_c])
+        mixed = layers.Conv2D(filters, 1, activation='swish', padding='same')(mixed)
+        return mixed
+
     def build(self):
         x = self.mixnet_block(self.input_layer, self.filters)
         x = layers.Dropout(self.dropout_rate)(x)  

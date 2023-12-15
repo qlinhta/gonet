@@ -25,7 +25,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.val_losses = []
         self.val_accuracies = []
         # self.cc = "LyonGo_10K_32_5_cosine_32_0.0005_100ep"
-        self.cc = "ParisGo_10k_32b_16f_0.0005_100ep"
+        self.cc = "ParisGo_10k_32b_16f_0.0001_100ep_0.5dr"
 
     def on_epoch_end(self, epoch, logs=None):
         golois.getBatch(self.input_data, self.policy, self.value, self.end, self.groups, (epoch + 1) * self.N)
@@ -76,7 +76,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     elif model_name == "ClassicGo":
         model = ClassicGo(planes, filters).build()
     elif model_name == "ParisGo":
-        model = ParisGo(planes, filters).build()
+        model = ParisGo(planes, filters, dropout_rate=0.5).build()
     else:
         raise ValueError(f"No model found with the name '{model_name}'.")
 
@@ -90,7 +90,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
             initial_learning_rate=0.0005, decay_steps=32000, decay_rate=0.9)
         optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
     elif model_name == "ParisGo":
-        lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=31250)
+        lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=31250)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
     model.compile(optimizer=optimizer,
@@ -118,7 +118,6 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, required=True, help='Path to config.json file')
     args = parser.parse_args()
 
-    # Load configuration from JSON file
     with open(args.config, 'r') as f:
         config = json.load(f)
 

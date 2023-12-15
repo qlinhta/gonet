@@ -32,9 +32,6 @@ class ClassicGo:
     def build(self):
         return self.model
 
-    def summary(self):
-        return self.model.summary()
-
 
 class LyonGo:
     def __init__(self, planes, filters, trunk, blocks):
@@ -90,58 +87,38 @@ class LyonGo:
     def summary(self):
         return self.model.summary()
 
-    def save_model(self, file_path):
-        self.model.save(file_path)
-
 
 class ParisGo:
-    def __init__(self, planes, filters):
+    def __init__(self, planes, filters, dropout_rate):
         self.input_layer = layers.Input(shape=(19, 19, planes), name='board')
         self.filters = filters
         self.planes = planes
+        self.dropout_rate = dropout_rate
         self.model = self.build()
 
     def build(self):
         x = self.mixnet_block(self.input_layer, self.filters)
+        x = layers.Dropout(self.dropout_rate)(x)  
 
         for _ in range(5):
             x = self.mixnet_block(x, self.filters)
+            x = layers.Dropout(self.dropout_rate)(x)  
 
-        policy_head = self.create_policy_head(x)
-        value_head = self.create_value_head(x)
+        policy_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
+                                    kernel_regularizer=regularizers.l2(0.0001))(x)
+        policy_head = layers.Flatten()(policy_head)
+        policy_head = layers.Dropout(self.dropout_rate)(policy_head) 
+        policy_head = layers.Activation('softmax', name='policy')(policy_head)
+
+        value_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
+                                   kernel_regularizer=regularizers.l2(0.0001))(x)
+        value_head = layers.Flatten()(value_head)
+        value_head = layers.Dropout(self.dropout_rate)(value_head)
+        value_head = layers.Dense(50, activation='swish', kernel_regularizer=regularizers.l2(0.0001))(value_head)
+        value_head = layers.Dense(1, activation='sigmoid', name='value')(value_head)
 
         model = Model(inputs=self.input_layer, outputs=[policy_head, value_head])
         return model
 
-    def mixnet_block(self, input_tensor, filters):
-        branch_a = layers.Conv2D(filters, 1, activation='swish', padding='same')(input_tensor)
-        branch_a = layers.BatchNormalization()(branch_a)
-        branch_b = layers.Conv2D(filters, (3, 3), activation='swish', padding='same')(input_tensor)
-        branch_b = layers.BatchNormalization()(branch_b)
-        branch_c = layers.Conv2D(filters, (5, 5), activation='swish', padding='same')(input_tensor)
-        branch_c = layers.BatchNormalization()(branch_c)
-
-        mixed = layers.Concatenate()([branch_a, branch_b, branch_c])
-        mixed = layers.Conv2D(filters, 1, activation='swish', padding='same')(mixed)
-        return mixed
-
-    def create_policy_head(self, x):
-        policy_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
-                                    kernel_regularizer=regularizers.l2(0.0001))(x)
-        policy_head = layers.Flatten()(policy_head)
-        policy_head = layers.Activation('softmax', name='policy')(policy_head)
-        return policy_head
-
-    def create_value_head(self, x):
-        value_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
-                                   kernel_regularizer=regularizers.l2(0.0001))(x)
-        value_head = layers.Flatten()(value_head)
-        value_head = layers.Dense(50, activation='swish', kernel_regularizer=regularizers.l2(0.0001))(value_head)
-        value_head = layers.Dense(1, activation='sigmoid', name='value')(value_head)
-        return value_head
-
     def summary(self):
         return self.model.summary()
-
-    def save_model(self, file_path):
-        self.model.save(file_path)

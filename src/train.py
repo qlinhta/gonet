@@ -76,7 +76,7 @@ def train_model(model_name, epochs, batch_size, N, planes, moves, filters):
     elif model_name == "ClassicGo":
         model = ClassicGo(planes, filters).build()
     elif model_name == "ParisGo":
-        model = ParisGo(planes, filters, dropout_rate=0.5).build()
+        model = ParisGo(planes, filters, dropout_rate=0.1).build()
     else:
         raise ValueError(f"No model found with the name '{model_name}'.")
 

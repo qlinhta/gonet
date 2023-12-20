@@ -13,6 +13,7 @@ N = 10000
 epochs = 20
 batch = 128
 filters = 32
+learning_rate = 0.0005
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -50,7 +51,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 
 model.summary()
 
-model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.0005, momentum=0.9),
+model.compile(optimizer=keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9),
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
               loss_weights={'policy': 1.0, 'value': 1.0},
               metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
@@ -68,4 +69,4 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
-        model.save(f'models/ClassicGo_{i}_{epochs}_{batch}_{N}_{filters}.h5')
+        model.save(f'models/ClassicGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_val_{val[3]:.2f}.h5')

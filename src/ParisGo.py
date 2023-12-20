@@ -15,7 +15,7 @@ epochs = 100
 batch = 128
 filters = 16
 dropout_rate = 0.1
-learning_rate = 0.0001
+learning_rate = 0.0005
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -74,7 +74,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 
 model.summary()
 
-lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=31250)
+lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=31250)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer,

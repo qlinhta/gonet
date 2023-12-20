@@ -83,7 +83,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 
 model.summary()
 
-lr_schedule = CosineDecay(initial_learning_rate=0.0005, decay_steps=32000)
+lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=32000)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer,

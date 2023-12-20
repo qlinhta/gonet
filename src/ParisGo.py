@@ -15,7 +15,7 @@ epochs = 100
 batch = 128
 filters = 16
 dropout_rate = 0.1
-learning_rate = 0.0005
+learning_rate = 0.001
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')

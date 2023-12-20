@@ -11,7 +11,7 @@ import golois
 planes = 31
 moves = 361
 N = 10000
-epochs = 20
+epochs = 100
 batch = 128
 filters = 16
 dropout_rate = 0.1
@@ -75,11 +75,6 @@ model.summary()
 
 lr_schedule = CosineDecay(initial_learning_rate=0.0001, decay_steps=31250)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-
-model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.0005, momentum=0.9),
-              loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
-              loss_weights={'policy': 1.0, 'value': 1.0},
-              metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
 
 model.compile(optimizer=optimizer,
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},

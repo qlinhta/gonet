@@ -22,9 +22,9 @@ plt.rc('lines', markersize=10)
 planes = 31
 moves = 361
 N = 10000
-epochs = 100
+epochs = 200
 batch = 128
-learning_rate = 0.005
+learning_rate = 0.001
 num_heads = 4
 num_transformer_blocks = 4
 d_model = 32
@@ -215,5 +215,5 @@ for i in range(1, epochs + 1):
         axs[1].set(xlabel='Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}.pdf")
+            f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}_val_{val[3]:.2f}.pdf")
         plt.close()

@@ -5,7 +5,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import gc
 from tensorflow.keras.optimizers.schedules import CosineDecay
-
+from prettytable import PrettyTable
 import golois
 
 planes = 31
@@ -17,6 +17,11 @@ filters = 16
 dropout_rate = 0
 learning_rate = 0.005
 decay_steps = N / batch * epochs
+
+table = PrettyTable()
+table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate", "Decay Steps"]
+table.add_row([epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
+print(table)
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')

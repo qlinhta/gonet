@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import gc
-
+from prettytable import PrettyTable
 import golois
 
 planes = 31
@@ -14,6 +14,11 @@ epochs = 20
 batch = 128
 filters = 32
 learning_rate = 0.0005
+
+table = PrettyTable()
+table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate"]
+table.add_row([epochs, batch, N, planes, moves, filters, learning_rate])
+print(table)
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')

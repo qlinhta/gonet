@@ -135,15 +135,21 @@ for i in range(1, epochs + 1):
         model.save(
             f"models/LyonGo_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
-        fig, axs = plt.subplots(2, 1, figsize=(10, 10))
-        axs[0].plot(train_losses, label='train')
-        axs[0].plot(val_losses, label='val')
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='grey', markersize=5)
+        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='black', markersize=5)
         axs[0].set_title('loss')
+        axs[0].grid()
         axs[0].legend()
-        axs[1].plot(train_acc, label='train')
-        axs[1].plot(val_acc, label='val')
+        axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='grey', markersize=5)
+        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='black', markersize=5)
         axs[1].set_title('accuracy')
         axs[1].legend()
+        axs[1].grid()
         axs[0].set(xlabel='epoch')
         axs[1].set(xlabel='epoch')
         plt.tight_layout()

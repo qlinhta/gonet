@@ -169,7 +169,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 model.summary()
 
 lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule, weight_decay=0.0001)
 
 model.compile(optimizer=optimizer,
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
@@ -215,5 +215,5 @@ for i in range(1, epochs + 1):
         axs[1].set(xlabel='Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}.pdf")
+            f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}_val_{val[3]:.2f}.pdf")
         plt.close()

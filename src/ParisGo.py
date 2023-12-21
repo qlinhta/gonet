@@ -11,11 +11,12 @@ import golois
 planes = 31
 moves = 361
 N = 10000
-epochs = 100
+epochs = 250
 batch = 128
 filters = 16
 dropout_rate = 0
 learning_rate = 0.005
+decay_steps = N/batch * epochs
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -74,7 +75,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 
 model.summary()
 
-lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=31250)
+lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer,

@@ -21,7 +21,8 @@ learning_rate = 0.0001
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
-table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate", "Decay Steps"]
+table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate",
+                     "Decay Steps"]
 table.add_row([epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
 print(table)
 
@@ -110,4 +111,5 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
-        model.save(f"models/LyonGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+        model.save(
+            f"models/LyonGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")

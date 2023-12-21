@@ -10,7 +10,7 @@ import golois
 import matplotlib.pyplot as plt
 
 plt.style.use('default')
-plt.rc('text', usetex=True)
+plt.rc('text', usetex=False)
 plt.rc('font', family='sans-serif')
 plt.rc('font', size=14)
 plt.rc('axes', titlesize=14)
@@ -25,7 +25,7 @@ moves = 361
 N = 10000
 epochs = 200
 batch = 128
-filters = 32
+filters = 60
 dropout_rate = 0
 trunk = 128
 blocks = 5
@@ -123,7 +123,7 @@ for i in range(1, epochs + 1):
                         epochs=1, batch_size=batch)
     if (i % 5 == 0):
         gc.collect()
-    if (i % 1 == 0):
+    if (i % 20 == 0):
         golois.getValidation(input_data, policy, value, end)
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
@@ -133,7 +133,7 @@ for i in range(1, epochs + 1):
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
         model.save(
-            f"models/LyonGo_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/LyonGo_{i}_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(2, 1, figsize=(10, 10))
         axs[0].plot(train_losses, label='train')

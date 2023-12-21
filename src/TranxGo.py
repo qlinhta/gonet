@@ -8,25 +8,6 @@ from tensorflow import keras
 import gc
 from tensorflow.keras.optimizers.schedules import CosineDecay
 
-planes = 31
-moves = 361
-N = 10000
-epochs = 100
-batch = 128
-learning_rate = 0.005
-num_heads = 4
-num_transformer_blocks = 4
-d_model = 64
-dropout_rate = 0
-decay_steps = N / batch * epochs
-
-table = PrettyTable()
-table.field_names = ["Transformer Blocks", "Head", "Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate",
-                     "Dropout Rate", "Decay Steps"]
-table.add_row(
-    [num_transformer_blocks, num_heads, epochs, batch, N, planes, moves, d_model, learning_rate, dropout_rate,
-     decay_steps])
-
 plt.style.use('default')
 plt.rc('text', usetex=False)
 plt.rc('font', family='sans-serif')
@@ -37,6 +18,28 @@ plt.rc('xtick', labelsize=14)
 plt.rc('ytick', labelsize=14)
 plt.rc('legend', fontsize=14)
 plt.rc('lines', markersize=10)
+
+planes = 31
+moves = 361
+N = 10000
+epochs = 100
+batch = 128
+learning_rate = 0.005
+num_heads = 4
+num_transformer_blocks = 4
+d_model = 32
+dropout_rate = 0
+decay_steps = N / batch * epochs
+num_res_blocks = 3
+res_filters = 32 
+
+table = PrettyTable()
+table.field_names = ["Transformer Blocks", "Head", "Epoch", "Batch", "N", "Planes", "Moves", "D-Model", "Learning Rate",
+                     "Dropout Rate", "Decay Steps"]
+table.add_row(
+    [num_transformer_blocks, num_heads, epochs, batch, N, planes, moves, d_model, learning_rate, dropout_rate,
+     decay_steps])
+print(table)
 
 train_losses = []
 val_losses = []
@@ -61,6 +64,26 @@ groups = groups.astype('float32')
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
+
+def residual_block(x, filters):
+    shortcut = x
+    x = layers.Conv2D(filters, kernel_size=3, padding='same')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
+    x = layers.Conv2D(filters, kernel_size=3, padding='same')(x)
+    x = layers.BatchNormalization()(x)
+    if shortcut.shape[-1] != filters:
+        shortcut = layers.Conv2D(filters, kernel_size=1, padding='same')(shortcut)
+    x = layers.Add()([x, shortcut])
+    x = layers.ReLU()(x)
+    return x
+
+def feature_extractor(input_shape, num_blocks, filters):
+    inputs = layers.Input(shape=input_shape)
+    x = inputs
+    for _ in range(num_blocks):
+        x = residual_block(x, filters)
+    return keras.Model(inputs, x)
 
 def scaled_dot_product_attention(queries, keys, values, mask):
     product = tf.matmul(queries, keys, transpose_b=True)
@@ -111,23 +134,26 @@ def point_wise_feed_forward_network(d_model, dff):
 
 
 def transformer_block(x, num_heads, d_model, dff, rate=0.1):
-    attn_output = MultiHeadAttention(num_heads, d_model)
+    shape = tf.shape(x)
+    batch_size, height, width, channels = shape[0], shape[1], shape[2], shape[3]
+    x_flattened = tf.reshape(x, [batch_size, height * width, channels])
+
+    attn_layer = MultiHeadAttention(num_heads, d_model)
+    attn_output = attn_layer(x_flattened, x_flattened, x_flattened, None)
     attn_output = tf.keras.layers.Dropout(rate)(attn_output)
+
+    attn_output = tf.reshape(attn_output, [batch_size, height, width, channels])
     out1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(x + attn_output)
     ffn_output = point_wise_feed_forward_network(d_model, dff)(out1)
     ffn_output = tf.keras.layers.Dropout(rate)(ffn_output)
     return tf.keras.layers.LayerNormalization(epsilon=1e-6)(out1 + ffn_output)
 
 
-input = tf.keras.Input(shape=(19, 19, planes), name='board')
-x = layers.Conv2D(d_model, 1, padding='same', kernel_regularizer=regularizers.l2(0.0001))(input)
-x = layers.BatchNormalization()(x)
-x = layers.ReLU()(x)
-
+input = layers.Input(shape=(19, 19, planes), name='board')
+_resnet = feature_extractor(input.shape[1:], num_res_blocks, res_filters)
+x = _resnet(input)
 for _ in range(num_transformer_blocks):
     x = transformer_block(x, num_heads, d_model, d_model * 2)
-
-x = layers.GlobalAveragePooling2D()(x)
 
 policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)
@@ -140,6 +166,7 @@ value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regulari
     value_head)
 
 model = keras.Model(inputs=input, outputs=[policy_head, value_head])
+model.summary()
 
 lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
@@ -188,5 +215,5 @@ for i in range(1, epochs + 1):
         axs[1].set(xlabel='Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"plots/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}.pdf")
+            f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}.pdf")
         plt.close()

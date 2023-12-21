@@ -11,19 +11,18 @@ import golois
 planes = 31
 moves = 361
 N = 10000
-epochs = 100
+epochs = 200
 batch = 128
 filters = 32
 dropout_rate = 0
 trunk = 128
 blocks = 5
-learning_rate = 0.0005
+learning_rate = 0.005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
-table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate",
-                     "Decay Steps"]
-table.add_row([epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
+table.field_names = ["LyonGo Blocks", "Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate", "Decay Steps"]
+table.add_row([blocks, epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
 print(table)
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
@@ -111,5 +110,9 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
+<<<<<<< HEAD
         model.save(
             f"models/LyonGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+=======
+        model.save(f"models/LyonGo_{i}_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+>>>>>>> 69b6ed1722110b208fa33cd826e7e686933bcc38

@@ -7,6 +7,18 @@ import gc
 from tensorflow.keras.optimizers.schedules import CosineDecay
 from prettytable import PrettyTable
 import golois
+import matplotlib.pyplot as plt
+
+plt.style.use('default')
+plt.rc('text', usetex=True)
+plt.rc('font', family='sans-serif')
+plt.rc('font', size=14)
+plt.rc('axes', titlesize=14)
+plt.rc('axes', labelsize=14)
+plt.rc('xtick', labelsize=14)
+plt.rc('ytick', labelsize=14)
+plt.rc('legend', fontsize=14)
+plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
@@ -21,9 +33,15 @@ learning_rate = 0.005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
-table.field_names = ["LyonGo Blocks", "Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate", "Decay Steps"]
+table.field_names = ["LyonGo Blocks", "Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate",
+                     "Dropout Rate", "Decay Steps"]
 table.add_row([blocks, epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
 print(table)
+
+train_losses = []
+val_losses = []
+train_acc = []
+val_acc = []
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -105,9 +123,30 @@ for i in range(1, epochs + 1):
                         epochs=1, batch_size=batch)
     if (i % 5 == 0):
         gc.collect()
-    if (i % 20 == 0):
+    if (i % 1 == 0):
         golois.getValidation(input_data, policy, value, end)
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
-        model.save(f"models/LyonGo_{i}_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+        train_losses.append(history.history['policy_loss'][0])
+        val_losses.append(val[1])
+        train_acc.append(history.history['policy_categorical_accuracy'][0])
+        val_acc.append(val[3])
+        model.save(
+            f"models/LyonGo_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+
+        fig, axs = plt.subplots(2, 1, figsize=(10, 10))
+        axs[0].plot(train_losses, label='train')
+        axs[0].plot(val_losses, label='val')
+        axs[0].set_title('loss')
+        axs[0].legend()
+        axs[1].plot(train_acc, label='train')
+        axs[1].plot(val_acc, label='val')
+        axs[1].set_title('accuracy')
+        axs[1].legend()
+        axs[0].set(xlabel='epoch')
+        axs[1].set(xlabel='epoch')
+        plt.tight_layout()
+        plt.savefig(
+            f"figures/LyonGo_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.pdf")
+        plt.close()

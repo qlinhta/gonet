@@ -16,7 +16,7 @@ batch = 128
 filters = 16
 dropout_rate = 0
 learning_rate = 0.005
-decay_steps = N/batch * epochs
+decay_steps = N / batch * epochs
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -96,4 +96,5 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
-        model.save(f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+        model.save(
+            f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")

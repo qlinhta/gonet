@@ -18,6 +18,7 @@ dropout_rate = 0.1
 trunk = 128
 blocks = 5
 learning_rate = 0.0001
+decay_steps = N / batch * epochs
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -83,7 +84,7 @@ model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 
 model.summary()
 
-lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=32000)
+lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer,

@@ -14,10 +14,10 @@ N = 10000
 epochs = 100
 batch = 128
 filters = 32
-dropout_rate = 0.1
+dropout_rate = 0
 trunk = 128
 blocks = 5
-learning_rate = 0.0001
+learning_rate = 0.0005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()

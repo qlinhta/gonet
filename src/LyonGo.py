@@ -110,9 +110,4 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
-<<<<<<< HEAD
-        model.save(
-            f"models/LyonGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
-=======
         model.save(f"models/LyonGo_{i}_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
->>>>>>> 69b6ed1722110b208fa33cd826e7e686933bcc38

@@ -31,7 +31,7 @@ d_model = 32
 dropout_rate = 0
 decay_steps = N / batch * epochs
 num_res_blocks = 3
-res_filters = 32 
+res_filters = 32
 
 table = PrettyTable()
 table.field_names = ["Transformer Blocks", "Head", "Epoch", "Batch", "N", "Planes", "Moves", "D-Model", "Learning Rate",
@@ -78,12 +78,14 @@ def residual_block(x, filters):
     x = layers.ReLU()(x)
     return x
 
+
 def feature_extractor(input_shape, num_blocks, filters):
     inputs = layers.Input(shape=input_shape)
     x = inputs
     for _ in range(num_blocks):
         x = residual_block(x, filters)
     return keras.Model(inputs, x)
+
 
 def scaled_dot_product_attention(queries, keys, values, mask):
     product = tf.matmul(queries, keys, transpose_b=True)
@@ -184,7 +186,7 @@ for i in range(1, epochs + 1):
                         epochs=1, batch_size=batch)
     if (i % 5 == 0):
         gc.collect()
-    if (i % 20 == 0):
+    if (i % 10 == 0):
         golois.getValidation(input_data, policy, value, end)
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
@@ -196,23 +198,27 @@ for i in range(1, epochs + 1):
         model.save(
             f"models/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}_val_{val[3]:.2f}.h5")
 
+
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
                     markerfacecolor='grey', markersize=5)
-        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='o',
+        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='black', markersize=5)
-        axs[0].set_title('loss')
+        axs[0].set_title(f"Validation loss: {val[1]:.2f}")
         axs[0].grid()
         axs[0].legend()
         axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
                     markerfacecolor='grey', markersize=5)
-        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='o',
+        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='black', markersize=5)
-        axs[1].set_title('accuracy')
+        axs[1].set_title(f"Validation accuracy: {val[3]:.2f}")
         axs[1].legend()
         axs[1].grid()
-        axs[0].set(xlabel='Epoch')
-        axs[1].set(xlabel='Epoch')
+        minor_ticks = np.arange(0, epochs + 1, 10)
+        axs[0].set_xticks(minor_ticks, minor=True)
+        axs[1].set_xticks(minor_ticks, minor=True)
+        axs[0].set(xlabel='Every #10 Epoch')
+        axs[1].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
             f"figures/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}_val_{val[3]:.2f}.pdf")

@@ -7,16 +7,23 @@ import gc
 from tensorflow.keras.optimizers.schedules import CosineDecay
 from prettytable import PrettyTable
 import golois
+import matplotlib.pyplot as plt
+
 
 planes = 31
 moves = 361
 N = 20000
-epochs = 200
+epochs = 240
 batch = 128
 filters = 16
 dropout_rate = 0
 learning_rate = 0.005
 decay_steps = N / batch * epochs
+
+train_losses = []
+val_losses = []
+train_acc = []
+val_acc = []
 
 table = PrettyTable()
 table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate", "Dropout Rate", "Decay Steps"]
@@ -101,5 +108,31 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
+        train_losses.append(history.history['policy_loss'][0])
+        val_losses.append(val[1])
+        train_acc.append(history.history['policy_categorical_accuracy'][0])
+        val_acc.append(val[3])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='grey', markersize=5)
+        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='black', markersize=5)
+        axs[0].set_title('loss')
+        axs[0].grid()
+        axs[0].legend()
+        axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='grey', markersize=5)
+        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='black', markersize=5)
+        axs[1].set_title('accuracy')
+        axs[1].legend()
+        axs[1].grid()
+        axs[0].set(xlabel='Epoch')
+        axs[1].set(xlabel='Epoch')
+        plt.tight_layout()
+        plt.savefig(
+            f"figures/ParisGo_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.pdf")
+        plt.close()

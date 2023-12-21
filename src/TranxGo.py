@@ -22,9 +22,9 @@ plt.rc('lines', markersize=10)
 planes = 31
 moves = 361
 N = 10000
-epochs = 100
+epochs = 200
 batch = 128
-learning_rate = 0.005
+learning_rate = 0.002
 num_heads = 4
 num_transformer_blocks = 4
 d_model = 32
@@ -194,7 +194,7 @@ for i in range(1, epochs + 1):
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
         model.save(
-            f"models/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}.h5")
+            f"models/TranxGo_{i}_{num_transformer_blocks}_{num_heads}_{epochs}_{batch}_{N}_{planes}_{moves}_{d_model}_{learning_rate}_{dropout_rate}_{decay_steps}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',

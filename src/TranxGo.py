@@ -21,10 +21,10 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
+N = 20000
 epochs = 200
 batch = 128
-learning_rate = 0.002
+learning_rate = 0.005
 num_heads = 4
 num_transformer_blocks = 4
 d_model = 32
@@ -214,9 +214,6 @@ for i in range(1, epochs + 1):
         axs[1].set_title(f"Validation accuracy: {val[3]:.2f}")
         axs[1].legend()
         axs[1].grid()
-        minor_ticks = np.arange(0, epochs + 1, 10)
-        axs[0].set_xticks(minor_ticks, minor=True)
-        axs[1].set_xticks(minor_ticks, minor=True)
         axs[0].set(xlabel='Every #10 Epoch')
         axs[1].set(xlabel='Every #10 Epoch')
         plt.tight_layout()

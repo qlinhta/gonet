@@ -21,10 +21,10 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 20000
-epochs = 200
+N = 10000
+epochs = 100
 batch = 128
-learning_rate = 0.005
+learning_rate = 0.001
 num_heads = 4
 num_transformer_blocks = 4
 d_model = 32
@@ -170,8 +170,8 @@ value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regulari
 model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 model.summary()
 
-lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
-optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule, weight_decay=0.0001)
+# lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
+optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=0.0001)
 
 model.compile(optimizer=optimizer,
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},

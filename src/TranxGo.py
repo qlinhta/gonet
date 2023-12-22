@@ -21,8 +21,8 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
-epochs = 100
+N = 20000
+epochs = 200
 batch = 128
 learning_rate = 0.001
 num_heads = 4

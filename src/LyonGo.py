@@ -22,7 +22,7 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
+N = 30000
 epochs = 200
 batch = 128
 filters = 60

@@ -12,12 +12,13 @@ import matplotlib.pyplot as plt
 
 planes = 31
 moves = 361
-N = 20000
-epochs = 240
+N = 10000
+epochs = 350
 batch = 128
 filters = 16
 dropout_rate = 0
 learning_rate = 0.005
+nblocks = 5
 decay_steps = N / batch * epochs
 
 train_losses = []
@@ -56,7 +57,6 @@ def mixnet_block(input_tensor, filters):
     branch_b = layers.BatchNormalization()(branch_b)
     branch_c = layers.Conv2D(filters, (5, 5), activation='swish', padding='same')(input_tensor)
     branch_c = layers.BatchNormalization()(branch_c)
-
     mixed = layers.Concatenate()([branch_a, branch_b, branch_c])
     mixed = layers.Conv2D(filters, 1, activation='swish', padding='same')(mixed)
     return mixed
@@ -66,7 +66,7 @@ input = keras.Input(shape=(19, 19, planes), name='board')
 x = mixnet_block(input, filters)
 x = layers.Dropout(dropout_rate)(x)
 
-for _ in range(5):
+for _ in range(nblocks):
     x = mixnet_block(x, filters)
     x = layers.Dropout(dropout_rate)(x)
 

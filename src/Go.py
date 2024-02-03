@@ -25,15 +25,14 @@ moves = 361
 N = 10000
 epochs = 200
 batch = 128
-filters = 60
 dropout_rate = 0
 learning_rate = 0.005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
-table.field_names = ["LyonGo Blocks", "Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate",
+table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Learning Rate",
                      "Dropout Rate", "Decay Steps"]
-table.add_row([blocks, epochs, batch, N, planes, moves, filters, learning_rate, dropout_rate, decay_steps])
+table.add_row([epochs, batch, N, planes, moves, learning_rate, dropout_rate, decay_steps])
 print(table)
 
 train_losses = []
@@ -133,48 +132,44 @@ class MixNetBlock(layers.Layer):
         return x
 
 
-def create_mixnet_model(input_layer, blocks_config):
-    input = input_layer
-    x = layers.Conv2D(32, kernel_size=3, strides=1, padding='same', use_bias=False)(input)
-    x = layers.BatchNormalization()(x)
-    x = Swish()(x)
-
-    for bc in blocks_config:
-        in_channels, out_channels, dw_kernel_size, expand_ratio, se_ratio, stride = bc
-        x = MixNetBlock(in_channels, out_channels, dw_kernel_size, expand_ratio, se_ratio, stride)(x)
-
-    policy_conv = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,
-                                kernel_regularizer=regularizers.l2(0.0001))(x)
-    policy_flatten = layers.Flatten()(policy_conv)
-    policy_output = layers.Activation('softmax', name='policy')(policy_flatten)
-
-    value_x = layers.GlobalAveragePooling2D()(x)
-    value_x = layers.Dense(50, activation='relu', kernel_regularizer=regularizers.l2(0.0001))(value_x)
-    value_output = layers.Dense(1, activation='sigmoid', name='value', kernel_regularizer=regularizers.l2(0.0001))(
-        value_x)
-
-    model = keras.Model(inputs=input, outputs=[policy_output, value_output])
-
-    return model
-
-
 blocks_config = [
     # (in_channels, out_channels, dw_kernel_size, expand_ratio, se_ratio, stride)
-    (32, 64, 3, 1, 0.25, 1),
-    (64, 128, 3, 6, 0.25, 2),
-]
+    (32, 48, 3, 1, 0.25, 1),
+    (48, 64, 3, 3, 0.25, 1),
+    ]
 
-input_layer = layers.Input(shape=(19, 19, planes), name='board')
-model = create_mixnet_model(input_layer, blocks_config)
+input = keras.Input(shape=(19, 19, planes), name='board')
 
-model.compile(optimizer='adam',
-              loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
-              metrics={'policy': 'accuracy', 'value': 'mse'})
+x = layers.Conv2D(32, (1, 1), activation='relu', padding='same', use_bias=False)(input)
+x = layers.BatchNormalization()(x)
+x = Swish()(x)
 
+for bc in blocks_config:
+    in_channels, out_channels, dw_kernel_size, expand_ratio, se_ratio, stride = bc
+    x = MixNetBlock(in_channels, out_channels, dw_kernel_size, expand_ratio, se_ratio, stride)(x)
+
+policy_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
+                            kernel_regularizer=regularizers.l2(0.0001))(x)
+policy_head = layers.Flatten()(policy_head)
+policy_head = layers.Dropout(dropout_rate)(policy_head)
+policy_head = layers.Activation('softmax', name='policy')(policy_head)
+
+value_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
+                           kernel_regularizer=regularizers.l2(0.0001))(x)
+value_head = layers.Flatten()(value_head)
+value_head = layers.Dropout(dropout_rate)(value_head)
+value_head = layers.Dense(50, activation='swish', kernel_regularizer=regularizers.l2(0.0001))(value_head)
+value_head = layers.Dense(1, activation='sigmoid', name='value')(value_head)
+
+model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 model.summary()
-
 lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+
+model.compile(optimizer=optimizer,
+              loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
+              loss_weights={'policy': 1.0, 'value': 1.0},
+              metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
 
 for i in range(1, epochs + 1):
     print('epoch ' + str(i))
@@ -194,7 +189,7 @@ for i in range(1, epochs + 1):
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
         model.save(
-            f"models/GoX_{i}_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/GoX_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
@@ -215,5 +210,5 @@ for i in range(1, epochs + 1):
         axs[1].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/GoX_{blocks}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.pdf")
+            f"figures/GoX_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.pdf")
         plt.close()

@@ -59,7 +59,7 @@ print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
 
-def MBConvBlock(input_tensor, kernel_size, filters, mix_kernels, expansion_factor=6, stride=1, alpha=1.0):
+def MBConvBlock(input_tensor, filters, mix_kernels, expansion_factor=6, stride=1, alpha=1.0):
     channel_axis = -1
     input_filters = input_tensor.shape[channel_axis]
     pointwise_filters = int(filters * alpha)
@@ -96,14 +96,15 @@ def MBConvBlock(input_tensor, kernel_size, filters, mix_kernels, expansion_facto
     return x
 
 
+
 alpha = 1.0
 input = keras.Input(shape=(19, 19, planes), name='board')
 
-x = MBConvBlock(input, kernel_size=[3], filters=16, mix_kernels=[3, 5], expansion_factor=1, alpha=alpha)
-x = MBConvBlock(x, kernel_size=[3], filters=24, mix_kernels=[3, 5], stride=2, alpha=alpha)
-x = MBConvBlock(x, kernel_size=[3], filters=24, mix_kernels=[3, 5], alpha=alpha)
-x = MBConvBlock(x, kernel_size=[3], filters=40, mix_kernels=[3, 5, 7], stride=2, alpha=alpha)
-x = MBConvBlock(x, kernel_size=[3], filters=40, mix_kernels=[3, 5, 7], alpha=alpha)
+x = MBConvBlock(input, filters=16, mix_kernels=[3, 5], expansion_factor=1, alpha=alpha)
+x = MBConvBlock(x, filters=24, mix_kernels=[3, 5], stride=2, alpha=alpha)
+x = MBConvBlock(x, filters=24, mix_kernels=[3, 5], alpha=alpha)
+x = MBConvBlock(x, filters=40, mix_kernels=[3, 5, 7], stride=2, alpha=alpha)
+x = MBConvBlock(x, filters=40, mix_kernels=[3, 5, 7], alpha=alpha)
 x = layers.GlobalAveragePooling2D()(x)
 x = layers.Dense(128, activation='relu')(x)
 x = layers.Dropout(0.3)(x)
@@ -149,4 +150,4 @@ for i in range(1, epochs + 1):
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
         model.save(
-            f"models/GoX_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/GoX_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")

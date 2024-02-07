@@ -62,52 +62,49 @@ golois.getValidation(input_data, policy, value, end)
 def MBConvBlock(input_tensor, filters, mix_kernels, expansion_factor=6, stride=1, alpha=1.0):
     channel_axis = -1
     input_filters = input_tensor.shape[channel_axis]
-    pointwise_filters = int(filters * alpha)
+    pointwise_conv_filters = int(filters * alpha)
 
     x = input_tensor
 
     # Expand
     if expansion_factor != 1:
-        expanded_filters = input_filters * expansion_factor
-        x = layers.Conv2D(expanded_filters, 1, padding='same', use_bias=False)(x)
+        x = layers.Conv2D(input_filters * expansion_factor, 1, padding='same', use_bias=False)(x)
         x = layers.BatchNormalization(axis=channel_axis)(x)
         x = layers.ReLU()(x)
 
-    # Depthwise
+    # Depthwise with mixed kernels
     if len(mix_kernels) > 1:
-        mixed = []
-        for kernel in mix_kernels:
-            dw = layers.DepthwiseConv2D(kernel, strides=stride, padding='same', use_bias=False)(x)
-            mixed.append(dw)
-        x = layers.Concatenate(axis=channel_axis)(mixed)
+        mixed_outputs = []
+        for kernel_size in mix_kernels:
+            dw = layers.DepthwiseConv2D(kernel_size, strides=stride, padding='same', use_bias=False)(x)
+            mixed_outputs.append(dw)
+        x = layers.Concatenate(axis=channel_axis)(mixed_outputs)
     else:
         x = layers.DepthwiseConv2D(mix_kernels[0], strides=stride, padding='same', use_bias=False)(x)
     x = layers.BatchNormalization(axis=channel_axis)(x)
     x = layers.ReLU()(x)
 
     # Project
-    x = layers.Conv2D(pointwise_filters, 1, padding='same', use_bias=False)(x)
+    x = layers.Conv2D(pointwise_conv_filters, 1, padding='same', use_bias=False)(x)
     x = layers.BatchNormalization(axis=channel_axis)(x)
 
-    # Skip connection and stride
-    if stride == 1 and input_filters == pointwise_filters:
+    # If stride is 1 and filters match, add a skip connection
+    if stride == 1 and input_filters == pointwise_conv_filters:
         x = layers.Add()([input_tensor, x])
 
     return x
 
 
-
 alpha = 1.0
 input = keras.Input(shape=(19, 19, planes), name='board')
-
 x = MBConvBlock(input, filters=16, mix_kernels=[3, 5], expansion_factor=1, alpha=alpha)
-x = MBConvBlock(x, filters=24, mix_kernels=[3, 5], stride=2, alpha=alpha)
-x = MBConvBlock(x, filters=24, mix_kernels=[3, 5], alpha=alpha)
-x = MBConvBlock(x, filters=40, mix_kernels=[3, 5, 7], stride=2, alpha=alpha)
-x = MBConvBlock(x, filters=40, mix_kernels=[3, 5, 7], alpha=alpha)
+x = MBConvBlock(x, filters=32, mix_kernels=[3, 5], stride=2, alpha=alpha)
+x = MBConvBlock(x, filters=32, mix_kernels=[3, 5], alpha=alpha)
+x = MBConvBlock(x, filters=64, mix_kernels=[3, 5, 7], stride=2, alpha=alpha)
+x = MBConvBlock(x, filters=64, mix_kernels=[3, 5, 7], alpha=alpha)
+
+# GlobalAveragePooling2D
 x = layers.GlobalAveragePooling2D()(x)
-x = layers.Dense(128, activation='relu')(x)
-x = layers.Dropout(0.3)(x)
 
 policy_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)

@@ -24,10 +24,10 @@ moves = 361
 N = 10000
 epochs = 200
 batch = 128
-learning_rate = 0.001
+learning_rate = 0.005
 dropout_rate = 0
 decay_steps = N / batch * epochs
-blocks = 4
+blocks = 8
 filters = 32
 
 table = PrettyTable()

@@ -22,8 +22,8 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
-epochs = 200
+N = 30000
+epochs = 350
 batch = 128
 dropout_rate = 0
 learning_rate = 0.005
@@ -65,14 +65,10 @@ def MBConvBlock(input_tensor, filters, mix_kernels, expansion_factor=6, stride=1
     pointwise_conv_filters = int(filters * alpha)
 
     x = input_tensor
-
-    # Expand
     if expansion_factor != 1:
         x = layers.Conv2D(input_filters * expansion_factor, 1, padding='same', use_bias=False)(x)
         x = layers.BatchNormalization(axis=channel_axis)(x)
         x = layers.ReLU()(x)
-
-    # Depthwise with mixed kernels
     if len(mix_kernels) > 1:
         mixed_outputs = []
         for kernel_size in mix_kernels:
@@ -83,12 +79,8 @@ def MBConvBlock(input_tensor, filters, mix_kernels, expansion_factor=6, stride=1
         x = layers.DepthwiseConv2D(mix_kernels[0], strides=stride, padding='same', use_bias=False)(x)
     x = layers.BatchNormalization(axis=channel_axis)(x)
     x = layers.ReLU()(x)
-
-    # Project
     x = layers.Conv2D(pointwise_conv_filters, 1, padding='same', use_bias=False)(x)
     x = layers.BatchNormalization(axis=channel_axis)(x)
-
-    # If stride is 1 and filters match, add a skip connection
     if stride == 1 and input_filters == pointwise_conv_filters:
         x = layers.Add()([input_tensor, x])
 

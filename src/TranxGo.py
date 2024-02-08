@@ -7,6 +7,7 @@ from prettytable import PrettyTable
 from tensorflow import keras
 import gc
 from tensorflow.keras.optimizers.schedules import CosineDecay
+from keras import ops
 
 plt.style.use('default')
 plt.rc('text', usetex=False)
@@ -21,7 +22,7 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 20000
+N = 10000
 epochs = 200
 batch = 128
 learning_rate = 0.001
@@ -65,97 +66,79 @@ print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
 
-def residual_block(x, filters):
-    shortcut = x
-    x = layers.Conv2D(filters, kernel_size=3, padding='same')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
-    x = layers.Conv2D(filters, kernel_size=3, padding='same')(x)
-    x = layers.BatchNormalization()(x)
-    if shortcut.shape[-1] != filters:
-        shortcut = layers.Conv2D(filters, kernel_size=1, padding='same')(shortcut)
-    x = layers.Add()([x, shortcut])
-    x = layers.ReLU()(x)
+def mlp(x, hidden_units, dropout_rate):
+    for units in hidden_units:
+        x = layers.Dense(units, activation=keras.activations.gelu)(x)
+        x = layers.Dropout(dropout_rate)(x)
     return x
 
 
-def feature_extractor(input_shape, num_blocks, filters):
-    inputs = layers.Input(shape=input_shape)
-    x = inputs
-    for _ in range(num_blocks):
-        x = residual_block(x, filters)
-    return keras.Model(inputs, x)
+class Patches(layers.Layer):
+    def __init__(self, patch_size):
+        super().__init__()
+        self.patch_size = patch_size
+
+    def call(self, images):
+        input_shape = ops.shape(images)
+        batch_size = input_shape[0]
+        height = input_shape[1]
+        width = input_shape[2]
+        channels = input_shape[3]
+        num_patches_h = height // self.patch_size
+        num_patches_w = width // self.patch_size
+        patches = keras.ops.image.extract_patches(images, size=self.patch_size)
+        patches = ops.reshape(
+            patches,
+            (
+                batch_size,
+                num_patches_h * num_patches_w,
+                self.patch_size * self.patch_size * channels,
+            ),
+        )
+        return patches
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"patch_size": self.patch_size})
+        return config
 
 
-def scaled_dot_product_attention(queries, keys, values, mask):
-    product = tf.matmul(queries, keys, transpose_b=True)
-    keys_dim = tf.cast(tf.shape(keys)[-1], tf.float32)
-    scaled_product = product / tf.math.sqrt(keys_dim)
-    if mask is not None:
-        scaled_product += (mask * -1e9)
-    attention = tf.nn.softmax(scaled_product, axis=-1)
-    return tf.matmul(attention, values)
 
+class PatchEncoder(layers.Layer):
+    def __init__(self, num_patches, projection_dim):
+        super().__init__()
+        self.num_patches = num_patches
+        self.projection = layers.Dense(units=projection_dim)
+        self.position_embedding = layers.Embedding(
+            input_dim=num_patches, output_dim=projection_dim
+        )
 
-class MultiHeadAttention(tf.keras.layers.Layer):
-    def __init__(self, num_heads, d_model):
-        super(MultiHeadAttention, self).__init__()
-        self.num_heads = num_heads
-        self.d_model = d_model
-        assert d_model % self.num_heads == 0
-        self.depth = d_model // self.num_heads
-        self.wq = tf.keras.layers.Dense(d_model)
-        self.wk = tf.keras.layers.Dense(d_model)
-        self.wv = tf.keras.layers.Dense(d_model)
-        self.dense = tf.keras.layers.Dense(d_model)
+    def call(self, patch):
+        positions = ops.expand_dims(
+            ops.arange(start=0, stop=self.num_patches, step=1), axis=0
+        )
+        projected_patches = self.projection(patch)
+        encoded = projected_patches + self.position_embedding(positions)
+        return encoded
 
-    def split_heads(self, x, batch_size):
-        x = tf.reshape(x, (batch_size, -1, self.num_heads, self.depth))
-        return tf.transpose(x, perm=[0, 2, 1, 3])
-
-    def call(self, v, k, q, mask):
-        batch_size = tf.shape(q)[0]
-        q = self.wq(q)
-        k = self.wk(k)
-        v = self.wv(v)
-        q = self.split_heads(q, batch_size)
-        k = self.split_heads(k, batch_size)
-        v = self.split_heads(v, batch_size)
-        scaled_attention = scaled_dot_product_attention(q, k, v, mask)
-        scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])
-        concat_attention = tf.reshape(scaled_attention, (batch_size, -1, self.d_model))
-        output = self.dense(concat_attention)
-        return output
-
-
-def point_wise_feed_forward_network(d_model, dff):
-    return tf.keras.Sequential([
-        tf.keras.layers.Dense(dff, activation='relu'),
-        tf.keras.layers.Dense(d_model)
-    ])
-
-
-def transformer_block(x, num_heads, d_model, dff, rate=0.1):
-    shape = tf.shape(x)
-    batch_size, height, width, channels = shape[0], shape[1], shape[2], shape[3]
-    x_flattened = tf.reshape(x, [batch_size, height * width, channels])
-
-    attn_layer = MultiHeadAttention(num_heads, d_model)
-    attn_output = attn_layer(x_flattened, x_flattened, x_flattened, None)
-    attn_output = tf.keras.layers.Dropout(rate)(attn_output)
-
-    attn_output = tf.reshape(attn_output, [batch_size, height, width, channels])
-    out1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(x + attn_output)
-    ffn_output = point_wise_feed_forward_network(d_model, dff)(out1)
-    ffn_output = tf.keras.layers.Dropout(rate)(ffn_output)
-    return tf.keras.layers.LayerNormalization(epsilon=1e-6)(out1 + ffn_output)
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_patches": self.num_patches})
+        return config
 
 
 input = layers.Input(shape=(19, 19, planes), name='board')
-_resnet = feature_extractor(input.shape[1:], num_res_blocks, res_filters)
-x = _resnet(input)
-for _ in range(num_transformer_blocks):
-    x = transformer_block(x, num_heads, d_model, d_model * 2)
+patch_size = 6
+patches = Patches(patch_size)(input)
+encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
+for _ in range(transformer_layers):
+    x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    attention_output = layers.MultiHeadAttention(num_heads=num_heads, key_dim=projection_dim, dropout=0.1)(x1, x1)
+    x2 = layers.Add()([attention_output, encoded_patches])
+    x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
+    x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
+    encoded_patches = layers.Add()([x3, x2])    
+representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)  
 
 policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)

@@ -11,7 +11,7 @@ zip_file = zipfile.ZipFile(BytesIO(response.content))
 zip_file.extractall("./data")
 
 source_file_path = "./data/games.data"
-destination_directory = "./gonet"
+destination_directory = "./"
 
 if not os.path.exists(destination_directory):
     os.makedirs(destination_directory)

@@ -10,10 +10,13 @@ import golois
 planes = 31
 moves = 361
 N = 10000
-epochs = 20
+epochs = 250
 batch = 128
-filters = 32
-learning_rate = 0.0005
+filters = 24
+learning_rate = 0.005
+dropout_rate = 0.0
+decay_steps = N / batch * epochs
+blocks = 3
 
 table = PrettyTable()
 table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate"]
@@ -38,10 +41,66 @@ groups = groups.astype('float32')
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
+
+def correct_pad(inputs, kernel_size):
+    """Returns a tuple for zero-padding for 2D convolution with downsampling."""
+    input_size = inputs.shape[1:3]
+    adjust = (1, 1) if input_size[0] % 2 == 0 else (0, 0)
+    return ((0, adjust[0]), (0, adjust[1]))
+
+
+def MBConv(input, filters, kernel_size, strides, expand_ratio, se_ratio, dropout_rate):
+    # Expansion phase (optional)
+    x = layers.Conv2D(filters * expand_ratio, kernel_size=1, padding='same', use_bias=False)(input)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+
+    # Depthwise convolution phase
+    if strides == 2:
+        x = layers.ZeroPadding2D(padding=correct_pad(x, kernel_size))(x)
+    x = layers.DepthwiseConv2D(kernel_size, strides=strides, padding='same' if strides == 1 else 'valid',
+                               use_bias=False)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+
+    # Squeeze and Excitation phase
+    if se_ratio:
+        se = layers.GlobalAveragePooling2D()(x)
+        se = layers.Reshape((1, 1, filters * expand_ratio))(se)
+        se = layers.Conv2D(int(filters * expand_ratio * se_ratio), kernel_size=1, activation='relu')(se)
+        se = layers.Conv2D(filters * expand_ratio, kernel_size=1, activation='sigmoid')(se)
+        x = layers.multiply([x, se])
+
+    # Output phase
+    x = layers.Conv2D(filters, kernel_size=1, padding='same', use_bias=False)(x)
+    x = layers.BatchNormalization()(x)
+    if input.shape[-1] == filters:
+        x = layers.add([input, x])
+    return x
+
+
+def squeeze_excite_block(input, ratio=16):
+    init = input
+    channel_axis = -1
+    filters = init.shape[channel_axis]
+    se_shape = (1, 1, filters)
+
+    se = layers.GlobalAveragePooling2D()(init)
+    se = layers.Reshape(se_shape)(se)
+    se = layers.Dense(filters // ratio, activation='relu', kernel_initializer='he_normal', use_bias=False)(se)
+    se = layers.Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
+
+    x = layers.multiply([init, se])
+    return x
+
+
 input = keras.Input(shape=(19, 19, planes), name='board')
-x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input)
-for i in range(5):
-    x = layers.Conv2D(filters, 3, activation='relu', padding='same')(x)
+x = layers.Conv2D(filters, 3, activation='relu', padding='same')(input)
+
+for i in range(blocks):
+    x = MBConv(x, filters=filters, kernel_size=3, strides=1, expand_ratio=6, se_ratio=0.25, dropout_rate=dropout_rate)
+    x = squeeze_excite_block(x, ratio=16)
+
 policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)
 policy_head = layers.Flatten()(policy_head)

@@ -98,13 +98,9 @@ def MBConvBlock(input_tensor, filters, mix_kernels, expansion_factor=6, stride=1
 alpha = 1.0
 input = keras.Input(shape=(19, 19, planes), name='board')
 x = MBConvBlock(input, filters=16, mix_kernels=[3, 5], expansion_factor=1, alpha=alpha)
-x = MBConvBlock(x, filters=32, mix_kernels=[3, 5], stride=2, alpha=alpha)
-x = MBConvBlock(x, filters=32, mix_kernels=[3, 5], alpha=alpha)
-x = MBConvBlock(x, filters=64, mix_kernels=[3, 5, 7], stride=2, alpha=alpha)
-x = MBConvBlock(x, filters=64, mix_kernels=[3, 5, 7], alpha=alpha)
-
-# GlobalAveragePooling2D
-x = layers.GlobalAveragePooling2D()(x)
+x = MBConvBlock(x, filters=28, mix_kernels=[3, 5], stride=1, alpha=alpha)
+x = MBConvBlock(x, filters=28, mix_kernels=[3, 5], alpha=alpha)
+x = MBConvBlock(x, filters=40, mix_kernels=[3, 5, 7], stride=1, alpha=alpha)
 
 policy_head = layers.Conv2D(1, 1, activation='swish', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)

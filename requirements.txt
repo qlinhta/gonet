@@ -1,0 +1,5 @@
+tensorflow
+prettytable
+numpy
+matplotlib
+keras

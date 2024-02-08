@@ -48,6 +48,7 @@ def swish(x):
     return x * tf.nn.sigmoid(x)
 
 
+
 def residual_block(x, filters):
     shortcut = x
     y = Conv2D(filters, 3, padding='same')(x)
@@ -80,7 +81,8 @@ value_head = layers.Dense(50, activation='relu', kernel_regularizer=regularizers
 value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regularizer=regularizers.l2(0.0001))(value_head)
 
 model = keras.Model(inputs=input, outputs=[policy_head, value_head])
-
+checkpoint_path = './src/model.ckpt'
+model.load_weights(checkpoint_path)
 model.summary()
 
 model.compile(optimizer=keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9),

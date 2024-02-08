@@ -48,13 +48,12 @@ def swish(x):
     return x * tf.nn.sigmoid(x)
 
 
-
 def residual_block(x, filters):
     shortcut = x
-    y = Conv2D(filters, 3, padding='same')(x)
+    y = Conv2D(filters, (3, 3), padding='same')(x)
     y = BatchNormalization()(y)
     y = swish(y)
-    y = DepthwiseConv2D(kernel_size=3, padding='same')(y)
+    y = DepthwiseConv2D((5, 5), padding='same')(y)
     y = BatchNormalization()(y)
     y = swish(y)
     y = Conv2D(filters, 1, padding='same')(y)
@@ -64,7 +63,10 @@ def residual_block(x, filters):
 
 
 input = keras.Input(shape=(19, 19, planes), name='board')
-x = Conv2D(filters, kernel_size=3, padding='same')(input)
+x = Conv2D(filters, (3, 3), padding='same')(input)
+x = BatchNormalization()(x)
+x = swish(x)
+x = Conv2D(filters, (5, 5), padding='same')(x)
 x = BatchNormalization()(x)
 x = swish(x)
 for _ in range(4):

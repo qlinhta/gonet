@@ -6,14 +6,19 @@ from tensorflow.keras import regularizers
 import gc
 from prettytable import PrettyTable
 import golois
+from tensorflow.keras.layers import Input, Conv2D, DepthwiseConv2D, BatchNormalization, Add, ReLU, \
+    GlobalAveragePooling2D, Dense, Activation, Multiply
 
 planes = 31
 moves = 361
 N = 10000
-epochs = 20
+epochs = 250
 batch = 128
-filters = 32
-learning_rate = 0.0005
+filters = 40
+learning_rate = 0.005
+dropout_rate = 0.0
+decay_steps = N / batch * epochs
+blocks = 5
 
 table = PrettyTable()
 table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Filters", "Learning Rate"]
@@ -38,10 +43,32 @@ groups = groups.astype('float32')
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
+
+def swish(x):
+    return x * tf.nn.sigmoid(x)
+
+
+def residual_block(x, filters):
+    shortcut = x
+    y = Conv2D(filters, 3, padding='same')(x)
+    y = BatchNormalization()(y)
+    y = swish(y)
+    y = DepthwiseConv2D(kernel_size=3, padding='same')(y)
+    y = BatchNormalization()(y)
+    y = swish(y)
+    y = Conv2D(filters, 1, padding='same')(y)
+    y = BatchNormalization()(y)
+    y = Add()([shortcut, y])
+    return y
+
+
 input = keras.Input(shape=(19, 19, planes), name='board')
-x = layers.Conv2D(filters, 1, activation='relu', padding='same')(input)
-for i in range(5):
-    x = layers.Conv2D(filters, 3, activation='relu', padding='same')(x)
+x = Conv2D(filters, kernel_size=3, padding='same')(input)
+x = BatchNormalization()(x)
+x = swish(x)
+for _ in range(4):
+    x = residual_block(x, filters)
+
 policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,
                             kernel_regularizer=regularizers.l2(0.0001))(x)
 policy_head = layers.Flatten()(policy_head)

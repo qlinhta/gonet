@@ -1,7 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as keras
 import numpy as np
-from keras.src.layers import Reshape
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import gc
@@ -49,27 +48,18 @@ def swish(x):
     return x * tf.nn.sigmoid(x)
 
 
-def SEBlock(x, filters, ratio=16):
-    se_shape = (1, 1, filters)
-    y = GlobalAveragePooling2D()(x)
-    y = Reshape(se_shape)(y)
-    y = Dense(filters // ratio, activation='relu', kernel_initializer='he_normal', use_bias=False)(y)
-    y = Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(y)
-    y = Multiply()([x, y])
-    return y
-
-
 def residual_block(x, filters):
     shortcut = x
-    x = Conv2D(filters, (3, 3), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = swish(x)
-    x = DepthwiseConv2D(filters, (5, 5), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = SEBlock(x, filters)
-    x = Add()([x, shortcut])
-    x = swish(x)
-    return x
+    y = Conv2D(filters, (3, 3), padding='same')(x)
+    y = BatchNormalization()(y)
+    y = swish(y)
+    y = DepthwiseConv2D((5, 5), padding='same')(y)
+    y = BatchNormalization()(y)
+    y = swish(y)
+    y = Conv2D(filters, 1, padding='same')(y)
+    y = BatchNormalization()(y)
+    y = Add()([shortcut, y])
+    return y
 
 
 input = keras.Input(shape=(19, 19, planes), name='board')
@@ -99,8 +89,6 @@ model.compile(optimizer=keras.optimizers.SGD(learning_rate=learning_rate, moment
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
               loss_weights={'policy': 1.0, 'value': 1.0},
               metrics={'policy': 'categorical_accuracy', 'value': 'mse'})
-for layer in model.layers:
-    print(layer.output_shape)
 
 for i in range(1, epochs + 1):
     print('epoch ' + str(i))

@@ -9,15 +9,31 @@ from prettytable import PrettyTable
 import golois
 import matplotlib.pyplot as plt
 
+plt.style.use('default')
+plt.rc('text', usetex=False)
+plt.rc('font', family='sans-serif')
+plt.rc('font', size=14)
+plt.rc('axes', titlesize=14)
+plt.rc('axes', labelsize=14)
+plt.rc('xtick', labelsize=14)
+plt.rc('ytick', labelsize=14)
+plt.rc('legend', fontsize=14)
+plt.rc('lines', markersize=10)
+
 planes = 31
 moves = 361
-N = 10000
-epochs = 100
-batch = 128
-filters = 16
+N = 30000
+epochs = 300
+batch = 256
 dropout_rate = 0
-learning_rate = 0.0005
+learning_rate = 0.005
 decay_steps = N / batch * epochs
+
+table = PrettyTable()
+table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Learning Rate",
+                     "Dropout Rate", "Decay Steps"]
+table.add_row([epochs, batch, N, planes, moves, learning_rate, dropout_rate, decay_steps])
+print(table)
 
 train_losses = []
 val_losses = []
@@ -143,6 +159,10 @@ for i in range(1, epochs + 1):
         val = model.evaluate(input_data,
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
+        train_losses.append(history.history['policy_loss'][0])
+        val_losses.append(val[1])
+        train_acc.append(history.history['policy_categorical_accuracy'][0])
+        val_acc.append(val[3])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 

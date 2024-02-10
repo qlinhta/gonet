@@ -22,9 +22,9 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
-epochs = 500
-batch = 128
+N = 50000
+epochs = 300
+batch = 512
 dropout_rate = 0
 learning_rate = 0.005
 decay_steps = N / batch * epochs
@@ -137,7 +137,7 @@ value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regulari
 model = keras.Model(inputs=inputs, outputs=[policy_head, value_head])
 
 lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer,
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},

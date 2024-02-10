@@ -22,9 +22,9 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 30000
-epochs = 300
-batch = 256
+N = 10000
+epochs = 500
+batch = 128
 dropout_rate = 0
 learning_rate = 0.005
 decay_steps = N / batch * epochs

@@ -104,3 +104,4 @@ for i in range(1, epochs + 1):
                              [policy, value], verbose=0, batch_size=batch)
         print("val =", val)
         model.save(f'models/ClassicGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{filters}_val_{val[3]:.2f}.h5')
+

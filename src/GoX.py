@@ -136,3 +136,21 @@ for i in range(1, epochs + 1):
         val_acc.append(val[3])
         model.save(
             f"models/GoX_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='white', markersize=5)
+        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='v',
+                    markerfacecolor='white', markersize=5)
+        axs[0].set_title(f"Validation loss: {val[1]:.2f}")
+        axs[0].grid()
+        axs[0].legend()
+        axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='white', markersize=5)
+        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='v',
+                    markerfacecolor='white', markersize=5)
+        axs[1].set_title(f"Validation accuracy: {val[3]:.2f}")
+        axs[1].legend()
+        axs[1].grid()
+        axs[0].set(xlabel='Every #10 Epoch')
+        axs[1].set(xlabel='Every #10 Epoch')
+        plt.tight_layout()

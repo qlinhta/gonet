@@ -8,6 +8,9 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 from prettytable import PrettyTable
 import golois
 import matplotlib.pyplot as plt
+<<<<<<< HEAD
+=======
+import os
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -32,11 +35,11 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 50000
+N = 30000
 epochs = 300
 batch = 512
 dropout_rate = 0
-learning_rate = 0.005
+learning_rate = 0.0005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
@@ -145,7 +148,13 @@ value_head = layers.Dense(50, activation='swish', kernel_regularizer=regularizer
 value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regularizer=regularizers.l2(0.0001))(value_head)
 
 model = keras.Model(inputs=inputs, outputs=[policy_head, value_head])
-model.load_weights('ParisGo_300_300_512_0.005_50000_0_val_0.47.h5')
+
+weights_file = './src/model.h5'
+if os.path.exists(weights_file):
+    model.load_weights(weights_file)
+    print("Model weights loaded successfully.")
+else:
+    print(f"Error: The file '{weights_file}' does not exist in the current directory.")
 
 lr_schedule = CosineDecay(initial_learning_rate=learning_rate, decay_steps=decay_steps)
 optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule)
@@ -175,7 +184,7 @@ for i in range(1, epochs + 1):
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
         model.save(
-            f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/PreTrained_ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
@@ -196,5 +205,5 @@ for i in range(1, epochs + 1):
         axs[1].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
+            f"figures/PreTrained_ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
         plt.close()

@@ -69,7 +69,7 @@ x = swish(x)
 x = Conv2D(filters, (5, 5), padding='same')(x)
 x = BatchNormalization()(x)
 x = swish(x)
-for _ in range(4):
+for _ in range(blocks):
     x = residual_block(x, filters)
 
 policy_head = layers.Conv2D(1, 1, activation='relu', padding='same', use_bias=False,

@@ -8,6 +8,16 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 from prettytable import PrettyTable
 import golois
 import matplotlib.pyplot as plt
+import warnings
+
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=ImportWarning)
+warnings.filterwarnings("ignore", category=ResourceWarning)
+
 
 plt.style.use('default')
 plt.rc('text', usetex=False)

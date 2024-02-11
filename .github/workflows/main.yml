@@ -21,4 +21,4 @@ jobs:
       run: pip install pybind11
     - name: Build the C++ library
       run: |
-        g++ -O3 -Wall -shared -std=c++11 -undefined dynamic_lookup $(python3 -m pybind11 --includes) golois.cpp -o golois$(python3-config --extension-suffix)
+        g++ -O1 -Wall -shared -std=c++11 -undefined dynamic_lookup $(python3 -m pybind11 --includes) golois.cpp -o golois$(python3-config --extension-suffix)

@@ -8,8 +8,6 @@ from tensorflow.keras.optimizers.schedules import CosineDecay
 from prettytable import PrettyTable
 import golois
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-=======
 import os
 import warnings
 

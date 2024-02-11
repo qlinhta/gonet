@@ -44,31 +44,22 @@ print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
 
-def swish(x):
-    return x * tf.nn.sigmoid(x)
-
-
 def residual_block(x, filters):
     shortcut = x
-    y = Conv2D(filters, (3, 3), padding='same')(x)
+    y = Conv2D(filters, (3, 3), padding='same', use_bias=False)(x)
     y = BatchNormalization()(y)
-    y = swish(y)
-    y = DepthwiseConv2D((5, 5), padding='same')(y)
-    y = BatchNormalization()(y)
-    y = swish(y)
-    y = Conv2D(filters, 1, padding='same')(y)
+    y = ReLU()(y)
+    y = Conv2D(filters, (3, 3), padding='same', use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Add()([shortcut, y])
+    y = ReLU()(y)
     return y
 
 
 input = keras.Input(shape=(19, 19, planes), name='board')
 x = Conv2D(filters, (3, 3), padding='same')(input)
 x = BatchNormalization()(x)
-x = swish(x)
-x = Conv2D(filters, (5, 5), padding='same')(x)
-x = BatchNormalization()(x)
-x = swish(x)
+x = ReLU()(x)
 for _ in range(blocks):
     x = residual_block(x, filters)
 
@@ -85,7 +76,13 @@ value_head = layers.Dense(1, activation='sigmoid', name='value', kernel_regulari
 model = keras.Model(inputs=input, outputs=[policy_head, value_head])
 model.summary()
 
-model.compile(optimizer=keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9),
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=learning_rate,
+    decay_steps=decay_steps,
+    decay_rate=0.96,
+    staircase=True)
+
+model.compile(optimizer=keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9),
               loss={'policy': 'categorical_crossentropy', 'value': 'binary_crossentropy'},
               loss_weights={'policy': 1.0, 'value': 1.0},
               metrics={'policy': 'categorical_accuracy', 'value': 'mse'})

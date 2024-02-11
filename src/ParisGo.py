@@ -23,10 +23,10 @@ plt.rc('lines', markersize=10)
 planes = 31
 moves = 361
 N = 50000
-epochs = 300
-batch = 512
+epochs = 500
+batch = 256
 dropout_rate = 0
-learning_rate = 0.005
+learning_rate = 0.0005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()

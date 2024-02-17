@@ -35,10 +35,7 @@ table.field_names = ["Epoch", "Batch", "N", "Planes", "Moves", "Learning Rate",
 table.add_row([epochs, batch, N, planes, moves, learning_rate, dropout_rate, decay_steps])
 print(table)
 
-train_losses = []
-val_losses = []
-train_acc = []
-val_acc = []
+train_losses, val_losses, train_acc, val_acc, train_mse, val_mse = [], [], [], [], [], []
 
 input_data = np.random.randint(2, size=(N, 19, 19, planes))
 input_data = input_data.astype('float32')
@@ -163,26 +160,36 @@ for i in range(1, epochs + 1):
         val_losses.append(val[1])
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
+        train_mse.append(history.history['value_mse'][0])
+        val_mse.append(val[4])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
                     markerfacecolor='white', markersize=5)
         axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='white', markersize=5)
-        axs[0].set_title(f"Validation loss: {val[1]:.2f}")
+        axs[0].set_title(f"Loss: {val[1]:.2f}")
         axs[0].grid()
         axs[0].legend()
         axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
                     markerfacecolor='white', markersize=5)
         axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='white', markersize=5)
-        axs[1].set_title(f"Validation accuracy: {val[3]:.2f}")
+        axs[1].set_title(f"Accuracy: {val[3]:.2f}")
         axs[1].legend()
         axs[1].grid()
+        axs[2].plot(train_mse, label='Train MSE', color='grey', linestyle='dashed', linewidth=1, marker='o',
+                    markerfacecolor='white', markersize=5)
+        axs[2].plot(val_mse, label='Validation MSE', color='black', linestyle='dashed', linewidth=1, marker='v',
+                    markerfacecolor='white', markersize=5)
+        axs[2].set_title(f"Mean Squared Error: {val[4]:.2f}")
+        axs[2].legend()
+        axs[2].grid()
         axs[0].set(xlabel='Every #10 Epoch')
         axs[1].set(xlabel='Every #10 Epoch')
+        axs[2].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
             f"figures/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")

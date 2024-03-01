@@ -179,7 +179,7 @@ for i in range(1, epochs + 1):
         train_mse.append(history.history['value_mse'][0])
         val_mse.append(val[4])
         model.save(
-            f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/ParisGoOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
         axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
@@ -208,5 +208,5 @@ for i in range(1, epochs + 1):
         axs[2].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
+            f"figures/ParisGoOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
         plt.close()

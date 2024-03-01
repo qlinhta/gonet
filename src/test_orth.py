@@ -55,6 +55,21 @@ groups = groups.astype('float32')
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
+class OrthogonalRegularizer(tf.keras.regularizers.Regularizer):
+    def __init__(self, factor):
+        self.factor = factor
+
+    def __call__(self, x):
+        _, _, _, c = x.shape
+        x_flat = tf.reshape(x, (-1, c))
+        gram_matrix = tf.matmul(x_flat, x_flat, transpose_a=True)
+        identity = tf.eye(c)
+        regularization = self.factor * tf.reduce_sum(tf.square(gram_matrix - identity))
+        return regularization
+
+    def get_config(self):
+        return {'factor': self.factor}
+
 
 def SEBlock(tensor, filters, ratio=16):
     se_shape = (1, 1, filters)
@@ -93,9 +108,10 @@ def PointwiseConvBlock(tensor, filters, linear=False):
 
 
 def ConvBlock(tensor):
-    conv = layers.Conv2D(filters=32, kernel_size=(1, 1), use_bias=False)(tensor)
-    conv = layers.BatchNormalization()(conv)
-    return layers.Activation('swish')(conv)
+    conv = tf.keras.layers.Conv2D(filters=32, kernel_size=(1, 1), use_bias=False,
+                                  kernel_regularizer=OrthogonalRegularizer(0.001))(tensor)
+    conv = tf.keras.layers.BatchNormalization()(conv)
+    return tf.keras.layers.Activation('swish')(conv)
 
 
 def InvertedResidualBlock(tensor, strides, filters, expansion):
@@ -160,8 +176,8 @@ for i in range(1, epochs + 1):
         val_losses.append(val[1])
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
-        train_mse.append(history.history['value_loss'][0])
-        val_mse.append(val[2])
+        train_mse.append(history.history['value_mse'][0])
+        val_mse.append(val[4])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
@@ -184,7 +200,7 @@ for i in range(1, epochs + 1):
                     markerfacecolor='white', markersize=5)
         axs[2].plot(val_mse, label='Validation MSE', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='white', markersize=5)
-        axs[2].set_title(f"Mean Squared Error: {val[2]:.2f}")
+        axs[2].set_title(f"Mean Squared Error: {val[4]:.2f}")
         axs[2].legend()
         axs[2].grid()
         axs[0].set(xlabel='Every #10 Epoch')

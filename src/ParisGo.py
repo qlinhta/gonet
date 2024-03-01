@@ -26,7 +26,7 @@ N = 50000
 epochs = 500
 batch = 256
 dropout_rate = 0
-learning_rate = 0.0005
+learning_rate = 0.005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()
@@ -160,8 +160,8 @@ for i in range(1, epochs + 1):
         val_losses.append(val[1])
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
-        train_mse.append(history.history['value_mse'][0])
-        val_mse.append(val[4])
+        train_mse.append(history.history['value_loss'][0])
+        val_mse.append(val[2])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
@@ -184,7 +184,7 @@ for i in range(1, epochs + 1):
                     markerfacecolor='white', markersize=5)
         axs[2].plot(val_mse, label='Validation MSE', color='black', linestyle='dashed', linewidth=1, marker='v',
                     markerfacecolor='white', markersize=5)
-        axs[2].set_title(f"Mean Squared Error: {val[4]:.2f}")
+        axs[2].set_title(f"Mean Squared Error: {val[2]:.2f}")
         axs[2].legend()
         axs[2].grid()
         axs[0].set(xlabel='Every #10 Epoch')

@@ -160,8 +160,8 @@ for i in range(1, epochs + 1):
         val_losses.append(val[1])
         train_acc.append(history.history['policy_categorical_accuracy'][0])
         val_acc.append(val[3])
-        train_mse.append(history.history['value_loss'][0])
-        val_mse.append(val[2])
+        train_mse.append(history.history['value_mse'][0])
+        val_mse.append(val[4])
         model.save(
             f"models/ParisGo_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 

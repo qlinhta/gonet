@@ -55,6 +55,21 @@ groups = groups.astype('float32')
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
 
+class OrthogonalRegularizer(tf.keras.regularizers.Regularizer):
+    def __init__(self, factor):
+        self.factor = factor
+
+    def __call__(self, x):
+        _, _, _, c = x.shape
+        x_flat = tf.reshape(x, (-1, c))
+        gram_matrix = tf.matmul(x_flat, x_flat, transpose_a=True)
+        identity = tf.eye(c)
+        regularization = self.factor * tf.reduce_sum(tf.square(gram_matrix - identity))
+        return regularization
+
+    def get_config(self):
+        return {'factor': self.factor}
+
 
 def SEBlock(tensor, filters, ratio=16):
     se_shape = (1, 1, filters)
@@ -93,9 +108,10 @@ def PointwiseConvBlock(tensor, filters, linear=False):
 
 
 def ConvBlock(tensor):
-    conv = layers.Conv2D(filters=32, kernel_size=(1, 1), use_bias=False)(tensor)
-    conv = layers.BatchNormalization()(conv)
-    return layers.Activation('swish')(conv)
+    conv = tf.keras.layers.Conv2D(filters=32, kernel_size=(1, 1), use_bias=False,
+                                  kernel_regularizer=OrthogonalRegularizer(0.001))(tensor)
+    conv = tf.keras.layers.BatchNormalization()(conv)
+    return tf.keras.layers.Activation('swish')(conv)
 
 
 def InvertedResidualBlock(tensor, strides, filters, expansion):

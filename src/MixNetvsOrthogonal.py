@@ -160,7 +160,7 @@ model.compile(optimizer=optimizer,
 
 model.summary()
 
-with open('ParisGoOrtho_.csv', 'w') as f:
+with open('MixNetOrtho_.csv', 'w') as f:
     f.write("Epoch, Loss, Policy Loss, Value Loss, Policy Accuracy, Value MSE\n")
 
 for i in range(1, epochs + 1):
@@ -183,12 +183,12 @@ for i in range(1, epochs + 1):
         train_mse.append(history.history['value_mse'][0])
         val_mse.append(val[4])
 
-        with open('ParisGoOrtho_.csv', 'a') as f:
+        with open('MixNetOrtho.csv', 'a') as f:
             f.write(
                 f"{i},{history.history['loss'][0]},{history.history['policy_loss'][0]},{history.history['value_loss'][0]},{history.history['policy_categorical_accuracy'][0]},{history.history['value_mse'][0]}\n")
 
         model.save(
-            f"models/ParisGoOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
+            f"models/MixNetOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
         axs[0].plot(train_losses, label='Train loss', color='lightcoral', linestyle='-', linewidth=2)
@@ -211,5 +211,5 @@ for i in range(1, epochs + 1):
         axs[2].set(xlabel='Every #10 Epoch')
         plt.tight_layout()
         plt.savefig(
-            f"figures/ParisGoOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
+            f"figures/MixNetOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_val_{val[3]:.2f}.pdf")
         plt.close()

@@ -26,7 +26,7 @@ N = 30000
 epochs = 1000
 batch = 256
 dropout_rate = 0
-learning_rate = 0.005
+learning_rate = 0.0005
 decay_steps = N / batch * epochs
 
 table = PrettyTable()

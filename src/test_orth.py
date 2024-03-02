@@ -22,8 +22,8 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 10000
-epochs = 100
+N = 30000
+epochs = 1000
 batch = 256
 dropout_rate = 0
 learning_rate = 0.005
@@ -54,6 +54,7 @@ groups = groups.astype('float32')
 
 print("getValidation", flush=True)
 golois.getValidation(input_data, policy, value, end)
+
 
 class OrthogonalRegularizer(tf.keras.regularizers.Regularizer):
     def __init__(self, factor):
@@ -159,6 +160,9 @@ model.compile(optimizer=optimizer,
 
 model.summary()
 
+with open('ParisGoOrtho_.csv', 'w') as f:
+    f.write("Epoch, Loss, Policy Loss, Value Loss, Policy Accuracy, Value MSE\n")
+
 for i in range(1, epochs + 1):
     print('epoch ' + str(i))
     golois.getBatch(input_data, policy, value, end, groups, i * N)
@@ -178,28 +182,27 @@ for i in range(1, epochs + 1):
         val_acc.append(val[3])
         train_mse.append(history.history['value_mse'][0])
         val_mse.append(val[4])
+
+        with open('ParisGoOrtho_.csv', 'a') as f:
+            f.write(
+                f"{i},{history.history['loss'][0]},{history.history['policy_loss'][0]},{history.history['value_loss'][0]},{history.history['policy_categorical_accuracy'][0]},{history.history['value_mse'][0]}\n")
+
         model.save(
             f"models/ParisGoOrtho_{i}_{epochs}_{batch}_{learning_rate}_{N}_{dropout_rate}_val_{val[3]:.2f}.h5")
 
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-        axs[0].plot(train_losses, label='Train loss', color='grey', linestyle='dashed', linewidth=1, marker='o',
-                    markerfacecolor='white', markersize=5)
-        axs[0].plot(val_losses, label='Validation loss', color='black', linestyle='dashed', linewidth=1, marker='v',
-                    markerfacecolor='white', markersize=5)
+        axs[0].plot(train_losses, label='Train loss', color='lightcoral', linestyle='-', linewidth=2)
+        axs[0].plot(val_losses, label='Validation loss', color='lightseagreen', linestyle='-.', linewidth=2)
         axs[0].set_title(f"Loss: {val[1]:.2f}")
         axs[0].grid()
         axs[0].legend()
-        axs[1].plot(train_acc, label='Train accuracy', color='grey', linestyle='dashed', linewidth=1, marker='o',
-                    markerfacecolor='white', markersize=5)
-        axs[1].plot(val_acc, label='Validation accuracy', color='black', linestyle='dashed', linewidth=1, marker='v',
-                    markerfacecolor='white', markersize=5)
+        axs[1].plot(train_acc, label='Train accuracy', color='lightcoral', linestyle='-', linewidth=2)
+        axs[1].plot(val_acc, label='Validation accuracy', color='lightseagreen', linestyle='-.', linewidth=2)
         axs[1].set_title(f"Accuracy: {val[3]:.2f}")
         axs[1].legend()
         axs[1].grid()
-        axs[2].plot(train_mse, label='Train MSE', color='grey', linestyle='dashed', linewidth=1, marker='o',
-                    markerfacecolor='white', markersize=5)
-        axs[2].plot(val_mse, label='Validation MSE', color='black', linestyle='dashed', linewidth=1, marker='v',
-                    markerfacecolor='white', markersize=5)
+        axs[2].plot(train_mse, label='Train MSE', color='lightcoral', linestyle='-', linewidth=2)
+        axs[2].plot(val_mse, label='Validation MSE', color='lightseagreen', linestyle='-.', linewidth=2)
         axs[2].set_title(f"Mean Squared Error: {val[4]:.2f}")
         axs[2].legend()
         axs[2].grid()

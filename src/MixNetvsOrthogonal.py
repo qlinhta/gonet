@@ -22,8 +22,8 @@ plt.rc('lines', markersize=10)
 
 planes = 31
 moves = 361
-N = 30000
-epochs = 1000
+N = 10000
+epochs = 500
 batch = 256
 dropout_rate = 0
 learning_rate = 0.0005
@@ -160,7 +160,7 @@ model.compile(optimizer=optimizer,
 
 model.summary()
 
-with open('MixNetOrtho_.csv', 'w') as f:
+with open('MixNetOrtho.csv', 'w') as f:
     f.write("Epoch, Loss, Policy Loss, Value Loss, Policy Accuracy, Value MSE\n")
 
 for i in range(1, epochs + 1):
